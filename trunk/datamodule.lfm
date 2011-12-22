@@ -1,0 +1,51 @@
+object dmApp: TdmApp
+  OnCreate = DataModuleCreate
+  OldCreateOrder = False
+  Height = 175
+  HorizontalOffset = 321
+  VerticalOffset = 174
+  Width = 355
+  object qryAmana: TSQLQuery
+    IndexName = 'DEFAULT_ORDER'
+    Database = dbAmana
+    Transaction = sqlTran
+    ReadOnly = True
+    Params = <>
+    ParseSQL = False
+    left = 104
+    top = 16
+  end
+  object sqlTran: TSQLTransaction
+    Active = False
+    Action = caNone
+    left = 32
+    top = 80
+  end
+  object dbAmana: TMySQL50Connection
+    Connected = False
+    LoginPrompt = False
+    KeepConnection = False
+    left = 32
+    top = 16
+  end
+  object qryQuick: TSQLQuery
+    IndexName = 'DEFAULT_ORDER'
+    Database = dbAmana
+    Transaction = sqlTran
+    ReadOnly = True
+    Params = <>
+    ParseSQL = False
+    left = 168
+    top = 16
+  end
+  object qryAudit: TSQLQuery
+    IndexName = 'DEFAULT_ORDER'
+    Database = dbAmana
+    Transaction = sqlTran
+    ReadOnly = True
+    Params = <>
+    ParseSQL = False
+    left = 224
+    top = 16
+  end
+end

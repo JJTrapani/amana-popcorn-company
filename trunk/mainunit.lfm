@@ -1,0 +1,76 @@
+object frmMain: TfrmMain
+  Left = 279
+  Height = 240
+  Top = 252
+  Width = 488
+  Caption = 'Amana Popcorn Company Content Management System'
+  ClientHeight = 220
+  ClientWidth = 488
+  Menu = mnu
+  OnClose = FormClose
+  OnCreate = FormCreate
+  LCLVersion = '0.9.30'
+  object grdMain: TStringGrid
+    Left = 0
+    Height = 220
+    Top = 0
+    Width = 488
+    Align = alClient
+    PopupMenu = pmu
+    TabOrder = 0
+  end
+  object mnu: TMainMenu
+    left = 424
+    top = 144
+    object mnuFile: TMenuItem
+      Caption = '&File'
+      object mnuFileExit: TMenuItem
+        Caption = '&Exit'
+        ShortCut = 16465
+        OnClick = mnuFileExitClick
+      end
+    end
+    object mnuManagement: TMenuItem
+      Caption = '&Management'
+      object mnuManagementSize: TMenuItem
+        Caption = '&Sizes'
+        ShortCut = 16467
+        OnClick = mnuManagementSizeClick
+      end
+      object mnuManagementTypes: TMenuItem
+        Caption = '&Types'
+        ShortCut = 16468
+        OnClick = mnuManagementTypesClick
+      end
+      object mnuManagementFlavors: TMenuItem
+        Caption = '&Flavors'
+        ShortCut = 16454
+        OnClick = mnuManagementFlavorsClick
+      end
+      object mnuManagementPrices: TMenuItem
+        Caption = '&Prices'
+        ShortCut = 16464
+        OnClick = mnuManagementPricesClick
+      end
+    end
+  end
+  object pmu: TPopupMenu
+    left = 392
+    top = 144
+    object pmuAdd: TMenuItem
+      Caption = 'A&dd'
+      ShortCut = 16452
+      OnClick = pmuAddClick
+    end
+    object pmuEdit: TMenuItem
+      Caption = '&Edit'
+      ShortCut = 16453
+      OnClick = pmuEditClick
+    end
+    object pmuRemove: TMenuItem
+      Caption = '&Remove'
+      ShortCut = 16466
+      OnClick = pmuRemoveClick
+    end
+  end
+end
