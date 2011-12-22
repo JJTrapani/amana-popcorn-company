@@ -1,0 +1,88 @@
+Use Amana;
+CREATE TABLE PopcornTypePrices(
+	ID int NOT NULL AUTO_INCREMENT,
+	Type_Ptr int NOT NULL,
+	Size_Ptr int NOT NULL,
+	Price decimal(6, 2) NOT NULL,
+    PRIMARY KEY (ID),
+	UNIQUE (ID)
+);
+
+Use Amana;
+CREATE TABLE PopcornSizes(
+	ID int NOT NULL AUTO_INCREMENT,	
+	Size nchar(15) NOT NULL,
+	Height int NULL,
+	Depth int NULL,
+	Width int NULL,
+	Cups int NOT NULL,
+    PRIMARY KEY (ID),
+	UNIQUE (ID)
+);
+
+Use Amana;
+CREATE TABLE PopcornType(
+	ID int NOT NULL AUTO_INCREMENT,	
+	Type nchar(30) NOT NULL,
+    PRIMARY KEY (ID),
+	UNIQUE (ID)
+);
+
+Use Amana;
+CREATE TABLE PopcornFlavors(
+	ID int NOT NULL AUTO_INCREMENT,
+	Flavor varchar(70) NOT NULL,
+	Description varchar(250) NULL,
+	Type_Ptr int NOT NULL,
+    PRIMARY KEY (ID),
+	UNIQUE (ID)
+);
+
+
+Use Amana;
+CREATE TABLE PopcornTypePricesAudit(
+	ID int NOT NULL AUTO_INCREMENT,
+	Type_Ptr int NOT NULL,
+	Size_Ptr int NOT NULL,
+	Price decimal(6, 2) NOT NULL,
+    ID_Ptr int,
+	ChangedOn DATETIME NULL,
+	PRIMARY KEY (ID),
+	UNIQUE (ID)
+);
+
+Use Amana;
+CREATE TABLE PopcornSizesAudit(
+	ID int NOT NULL AUTO_INCREMENT,	
+	Size nchar(15) NOT NULL,
+	Height int NULL,
+	Depth int NULL,
+	Width int NULL,
+	Cups int NOT NULL,
+    ID_Ptr int,
+	ChangedOn DATETIME NULL,
+	PRIMARY KEY (ID),
+	UNIQUE (ID)
+);
+
+Use Amana;
+CREATE TABLE PopcornTypeAudit(
+	ID int NOT NULL AUTO_INCREMENT,	
+	Type nchar(30) NOT NULL,
+    ID_Ptr int,
+	ChangedOn DATETIME NULL,
+	PRIMARY KEY (ID),
+	UNIQUE (ID)
+);
+
+Use Amana;
+CREATE TABLE PopcornFlavorsAudit(
+	ID int NOT NULL AUTO_INCREMENT,
+	Flavor varchar(70) NOT NULL,
+	Description varchar(250) NULL,
+	Type_Ptr int NOT NULL,
+	ID_Ptr int,
+	ChangedOn DATETIME NULL,
+	PRIMARY KEY (ID),
+	UNIQUE (ID)
+);
