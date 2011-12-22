@@ -1,0 +1,151 @@
+object frmSizeManagement: TfrmSizeManagement
+  Left = 355
+  Height = 240
+  Top = 198
+  Width = 320
+  Caption = 'Size Management'
+  ClientHeight = 240
+  ClientWidth = 320
+  OnCreate = FormCreate
+  LCLVersion = '0.9.30'
+  object gbDetails: TGroupBox
+    Left = 135
+    Height = 240
+    Top = 0
+    Width = 185
+    Align = alRight
+    Caption = 'Details'
+    ClientHeight = 222
+    ClientWidth = 181
+    TabOrder = 0
+    object edtSize: TEdit
+      Left = 15
+      Height = 23
+      Top = 16
+      Width = 80
+      TabOrder = 0
+    end
+    object edtHeight: TEdit
+      Left = 15
+      Height = 23
+      Top = 55
+      Width = 80
+      OnKeyPress = edtKeyPress
+      TabOrder = 1
+    end
+    object edtWidth: TEdit
+      Left = 15
+      Height = 23
+      Top = 96
+      Width = 80
+      OnKeyPress = edtKeyPress
+      TabOrder = 2
+    end
+    object edtDepth: TEdit
+      Left = 15
+      Height = 23
+      Top = 136
+      Width = 80
+      OnKeyPress = edtKeyPress
+      TabOrder = 3
+    end
+    object lblSize: TLabel
+      Left = 15
+      Height = 16
+      Top = 0
+      Width = 56
+      Caption = 'Size Name'
+      ParentColor = False
+    end
+    object lblHeight: TLabel
+      Left = 15
+      Height = 16
+      Top = 40
+      Width = 37
+      Caption = 'Height'
+      ParentColor = False
+    end
+    object lblWidth: TLabel
+      Left = 15
+      Height = 16
+      Top = 80
+      Width = 33
+      Caption = 'Width'
+      ParentColor = False
+    end
+    object lblDepth: TLabel
+      Left = 15
+      Height = 16
+      Top = 120
+      Width = 33
+      Caption = 'Depth'
+      ParentColor = False
+    end
+    object edtCups: TEdit
+      Left = 15
+      Height = 23
+      Top = 176
+      Width = 80
+      OnKeyPress = edtKeyPress
+      TabOrder = 4
+    end
+    object lblCups: TLabel
+      Left = 15
+      Height = 16
+      Top = 160
+      Width = 28
+      Caption = 'Cups'
+      ParentColor = False
+    end
+    object btnCancel: TButton
+      Left = 103
+      Height = 73
+      Top = 0
+      Width = 75
+      Caption = '&Cancel'
+      Enabled = False
+      OnClick = btnCancelClick
+      TabOrder = 5
+      Visible = False
+    end
+    object btnSave: TButton
+      Left = 103
+      Height = 73
+      Top = 80
+      Width = 75
+      Caption = '&Save'
+      Enabled = False
+      OnClick = btnSaveClick
+      TabOrder = 6
+      Visible = False
+    end
+  end
+  object lstbxItems: TListBox
+    Left = 0
+    Height = 240
+    Top = 0
+    Width = 135
+    Align = alClient
+    ItemHeight = 0
+    OnClick = lstbxItemsClick
+    PopupMenu = pmu
+    TabOrder = 1
+  end
+  object pmu: TPopupMenu
+    OnPopup = pmuPopup
+    left = 8
+    top = 16
+    object pmuAdd: TMenuItem
+      Caption = '&Add'
+      OnClick = pmuAddClick
+    end
+    object pmuEdit: TMenuItem
+      Caption = '&Edit'
+      OnClick = pmuEditClick
+    end
+    object pmuRemove: TMenuItem
+      Caption = '&Remove'
+      OnClick = pmuRemoveClick
+    end
+  end
+end
