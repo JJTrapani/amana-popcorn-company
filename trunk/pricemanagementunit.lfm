@@ -42,6 +42,7 @@ object frmPriceManagement: TfrmPriceManagement
       Width = 272
       Align = alTop
       ItemHeight = 15
+      Style = csDropDownList
       TabOrder = 1
     end
     object cbxSize: TComboBox
@@ -51,6 +52,7 @@ object frmPriceManagement: TfrmPriceManagement
       Width = 272
       Align = alTop
       ItemHeight = 15
+      Style = csDropDownList
       TabOrder = 4
     end
     object TComboBox

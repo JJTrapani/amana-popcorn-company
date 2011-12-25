@@ -59,6 +59,7 @@ object frmFlavorManagement: TfrmFlavorManagement
       Width = 272
       Align = alBottom
       ItemHeight = 15
+      Style = csDropDownList
       TabOrder = 2
     end
     object pnlBot: TPanel
