@@ -65,7 +65,8 @@ Uses
   DataModule,
   SizeManagementUnit,
   TypeManagementUnit,
-  FlavorManagementUnit;
+  FlavorManagementUnit,
+  PriceManagementUnit;
 
 
 
@@ -103,6 +104,10 @@ End; { mnuManagementFlavorsClick Procedure }
 
 Procedure TfrmMain.mnuManagementPricesClick                    (         Sender: TObject               );
 Begin
+
+  Application.CreateForm (TfrmPriceManagement, frmPriceManagement);
+  frmPriceManagement.ShowModal;
+  frmPriceManagement.Free;
 
 End; { mnuManagementPricesClick Procedure }
 { ----------------------------------------------------------------------------- }
