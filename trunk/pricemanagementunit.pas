@@ -1,4 +1,4 @@
-Unit FlavorManagementUnit;
+Unit PriceManagementUnit;
 
 {$mode objfpc}{$H+}
 
@@ -18,19 +18,20 @@ Uses
 
 Type
 
-  { TfrmFlavorManagement }
-  TfrmFlavorManagement = Class (TForm)
+  { TfrmPriceManagement }
+  TfrmPriceManagement = Class (TForm)
     btnTypeManagement   : TButton;
+    btnSizeManagement   : TButton;
     cbxType             : TComboBox;
+    cbxSize             : TComboBox;
     gbDetails           : TGroupBox;
     btnCancel           : TButton;
     btnSave             : TButton;
-    edtFlavor           : TEdit;
+    edtPrice            : TEdit;
     lblType             : TLabel;
-    lblFlavor           : TLabel;
-    lblDescription      : TLabel;
+    lblPrice            : TLabel;
     lstbxItems          : TListBox;
-    mmoDescription      : TMemo;
+    pnlMid              : TPanel;
     pnlMidBot           : TPanel;
     pnlBot              : TPanel;
     pmuEdit             : TMenuItem;
@@ -53,14 +54,17 @@ Type
     Procedure edtKeyPress            (                Sender: TObject;
                                                      Var Key: Char              );
     Procedure btnTypeManagementClick (                Sender: TObject           );
+    Procedure btnSizeManagementClick (                Sender: TObject           );
+
 
     Private
       Procedure RefreshTypeList;
+      Procedure RefreshSizeList;
 
   End;
 
 Var
-  frmFlavorManagement: TfrmFlavorManagement;
+  frmPriceManagement: TfrmPriceManagement;
 
 Implementation
 
@@ -68,7 +72,8 @@ Implementation
 
 Uses
   DataModule,
-  TypeManagementUnit;
+  TypeManagementUnit,
+  SizeManagementUnit;
 
 
 
@@ -77,7 +82,7 @@ Uses
 { ---------------------- FORM-INDUCED PUBLIC METHODS -------------------------- }
 { ----------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.FormCreate                                  (         Sender: TObject               );
+Procedure TfrmPriceManagement.FormCreate                       (         Sender: TObject               );
 Begin
 
   { Hide and disable the Cancel/Save buttons }
@@ -87,17 +92,18 @@ Begin
   btnSave.Visible           := False;
   btnTypeManagement.Enabled := False;
   btnTypeManagement.Visible := False;
-
+  btnSizeManagement.Enabled := False;
+  btnSizeManagement.Visible := False;
 
   { Set the max lengths of the editboxes }
-  edtFlavor.MaxLength      := 70;
-  mmoDescription.MaxLength := 250;
+  edtPrice.MaxLength       := 6;
 
   With dmApp Do Begin
 
-    { Load all the items from the popcorn Type table }
-    qryAmana.SQL.Text := 'Select ID, Flavor ' +
-                         'From popcornflavors;';
+    { Load all the items from the popcorn type prices table }
+    qryAmana.SQL.Text := 'Select ID, Price ' +
+                         'From popcorntypeprices ' +
+                         'Order By Price;';
 
     qryAmana.Open;
 
@@ -105,7 +111,7 @@ Begin
 
       Application.ProcessMessages;
 
-      lstbxItems.Items.AddObject (qryAmana.FieldByName ('Flavor').AsString, TObject (qryAmana.FieldByName ('ID').AsInteger));
+      lstbxItems.Items.AddObject (FormatFloat ('0.00', qryAmana.FieldByName ('Price').AsFloat), TObject (qryAmana.FieldByName ('ID').AsInteger));
 
       qryAmana.Next;
 
@@ -113,17 +119,18 @@ Begin
 
     qryAmana.Close;
 
-    { Load the type list }
+    { Load the type and size lists }
     RefreshTypeList;
-
+	RefreshSizeList;
+	
   End; { With dmApp }
 
 End; { FormCreate Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.lstbxItemsClick                   (         Sender: TObject               );
+Procedure TfrmPriceManagement.lstbxItemsClick                  (         Sender: TObject               );
 Var
-  cbxTypeIndex : Integer;
+  cbxIndex : Integer;
 
 Begin
 
@@ -132,8 +139,8 @@ Begin
     { If the user selected an valid item }
     If (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex]) <> -1) Then Begin
 
-      qryAmana.SQL.Text := 'Select ID, Flavor, Description, Type_Ptr ' +
-                           'From popcornflavors ' +
+      qryAmana.SQL.Text := 'Select ID, Price, Type_Ptr, Size_Ptr ' +
+                           'From popcorntypeprices ' +
                            'Where (ID = ' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ');';
 
 
@@ -141,16 +148,20 @@ Begin
 
       If (Not qryAmana.Eof) Then Begin
 
-        edtFlavor.Text      := qryAmana.FieldByName ('Flavor').AsString;
-        mmoDescription.Text := qryAmana.FieldByName ('Description').AsString;
-
+        edtPrice.Text      := FormatFloat ('0.00', qryAmana.FieldByName ('Price').AsFloat);
 
         { If the Type Pointer points to a valid type still, then find it and select that item from the list }
-        cbxTypeIndex := cbxType.Items.IndexOfObject (TObject (qryAmana.FieldByName ('Type_Ptr').AsInteger));
+        cbxIndex := cbxType.Items.IndexOfObject (TObject (qryAmana.FieldByName ('Type_Ptr').AsInteger));
 
-        If (cbxTypeIndex > -1)
-          Then cbxType.ItemIndex := cbxTypeIndex;
+        If (cbxIndex > -1)
+          Then cbxType.ItemIndex := cbxIndex;
 
+        { If the Size Pointer points to a valid size still, then find it and select that item from the list }
+        cbxIndex := cbxSize.Items.IndexOfObject (TObject (qryAmana.FieldByName ('Size_Ptr').AsInteger));
+
+        If (cbxIndex > -1)
+          Then cbxSize.ItemIndex := cbxIndex;
+    
       End; { If Not Eof }
 
       qryAmana.Close;
@@ -162,7 +173,7 @@ Begin
 End; { lstbxItemsClick Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.pmuPopup                          (         Sender: TObject               );
+Procedure TfrmPriceManagement.pmuPopup                         (         Sender: TObject               );
 Begin
 
   { Disable the inapplicable menu items }
@@ -172,7 +183,7 @@ Begin
 End; { pmuPopup Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.pmuAddClick                       (         Sender: TObject               );
+Procedure TfrmPriceManagement.pmuAddClick                      (         Sender: TObject               );
 Begin
 
   { Clear off the form }
@@ -188,11 +199,13 @@ Begin
   btnSave.Visible           := True;
   btnTypeManagement.Enabled := True;
   btnTypeManagement.Visible := True;
-
+  btnSizeManagement.Enabled := True;
+  btnSizeManagement.Visible := True;
+  
 End; { pmuAddClick Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.pmuEditClick                      (         Sender: TObject               );
+Procedure TfrmPriceManagement.pmuEditClick                     (         Sender: TObject               );
 Begin
 
   { Disable the listbox, so the user HAS to make a choice to edit the data }
@@ -205,11 +218,13 @@ Begin
   btnSave.Visible           := True;
   btnTypeManagement.Enabled := True;
   btnTypeManagement.Visible := True;
-
+  btnSizeManagement.Enabled := True;
+  btnSizeManagement.Visible := True;
+  
 End; { pmuEditClick Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.pmuRemoveClick                    (         Sender: TObject               );
+Procedure TfrmPriceManagement.pmuRemoveClick                   (         Sender: TObject               );
 Begin
 
   With dmApp Do Begin
@@ -220,7 +235,7 @@ Begin
       If (MessageDlg ('Question', 'Do you wish to remove this item (it cannot be undone)?', mtConfirmation, [mbYes, mbNo],0) = mrYes) Then Begin
 
         qryAmana.SQL.Text := 'Delete ' +
-                             'From popcornflavors ' +
+                             'From popcorntypeprices ' +
                              'Where (ID = ' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ');';
 
         qryAmana.ExecSQL;
@@ -237,12 +252,12 @@ Begin
 End; { pmuRemoveClick Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.btnCancelClick                    (         Sender: TObject               );
+Procedure TfrmPriceManagement.btnCancelClick                   (         Sender: TObject               );
 Begin
 
   { Deselect all options and data and reset the form }
   lstbxItems.ItemIndex := -1;
-  edtFlavor.Text       := '';
+  edtPrice.Text       := '';
 
   { Hide and disable the Cancel/Save buttons }
   btnCancel.Enabled         := False;
@@ -251,14 +266,16 @@ Begin
   btnSave.Visible           := False;
   btnTypeManagement.Enabled := False;
   btnTypeManagement.Visible := False;
-
+  btnSizeManagement.Enabled := False;
+  btnSizeManagement.Visible := False;
+  
   { Enable the listbox }
   lstbxItems.Enabled := True;
 
 End; { btnCancelClick Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.btnSaveClick                      (         Sender: TObject               );
+Procedure TfrmPriceManagement.btnSaveClick                     (         Sender: TObject               );
 Var
   NewItemID : Integer;
 
@@ -269,7 +286,7 @@ Begin
     { If the list does not have an item highlighted, insert a new record }
     If (lstbxItems.ItemIndex = -1) Then Begin
 
-      qryAmana.SQL.Text := 'Insert Into popcornflavors (Flavor, Description, Type_Ptr) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ');';
+      qryAmana.SQL.Text := 'Insert Into popcorntypeprices (Price, Type_Ptr, Size_Ptr) Values (''' + CleanQueryVarStr (edtPrice.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (Integer (cbxSize.Items.Objects [cbxSize.ItemIndex])) + ');';
 
       { Add a record to the audit trail }
       AddAuditTrailRecord (qryAmana.SQL.Text);
@@ -282,10 +299,10 @@ Begin
       qryAmana.Close;
 
       { Add a record to the audit trail }
-      AddAuditTrailRecord ('Insert Into popcornflavorsaudit (Flavor, Description, Type_Ptr, ID_Ptr, ChangedOn) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (NewItemID) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
+      AddAuditTrailRecord ('Insert Into popcorntypepricesaudit (Price, Type_Ptr, Size_Ptr, ID_Ptr, ChangedOn) Values (''' + CleanQueryVarStr (edtPrice.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (Integer (cbxSize.Items.Objects [cbxSize.ItemIndex])) + ',' + IntToStr (NewItemID) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
 
       { Add the item to the list }
-      lstbxItems.Items.AddObject (CleanQueryVarStr (edtFlavor.Text), TObject (NewItemID));
+      lstbxItems.Items.AddObject (CleanQueryVarStr (edtPrice.Text), TObject (NewItemID));
 
     End
 
@@ -293,20 +310,20 @@ Begin
     Else Begin
 
       qryAmana.SQL.Text := 'Update popcornflavors Set ' +
-                                   'Flavor = '''      + CleanQueryVarStr (edtFlavor.Text)                              + ''',' +
-                                   'Description = ''' + CleanQueryVarStr (mmoDescription.Text)                         + ''',' +
-                                   'Type_Ptr = '      + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ' ' +
+                                   'Price = '''       + CleanQueryVarStr (edtPrice.Text)                              + ''',' +
+                                   'Type_Ptr = '      + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' +
+							       'Size_Ptr = '      + IntToStr (Integer (cbxSize.Items.Objects [cbxSize.ItemIndex])) + ' ' +
 
                            'Where (ID = ' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ');';
 
       { Add a record to the audit trail }
-      AddAuditTrailRecord ('Insert Into popcornflavorsaudit (Flavor, Description, Type_Ptr, ID_Ptr, ChangedOn) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
+      AddAuditTrailRecord ('Insert Into popcornflavorsaudit (Price, Type_Ptr, Size_Ptr, ID_Ptr, ChangedOn) Values (''' + CleanQueryVarStr (edtPrice.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (Integer (cbxSize.Items.Objects [cbxSize.ItemIndex])) + ',' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
 
       { Execute the SQL query }
       qryAmana.ExecSQL;
 
       { Update the listbox's item's label }
-      lstbxItems.Items.Strings [lstbxItems.ItemIndex] := CleanQueryVarStr (edtFlavor.Text);
+      lstbxItems.Items.Strings [lstbxItems.ItemIndex] := CleanQueryVarStr (edtPrice.Text);
 
     End;
 
@@ -320,14 +337,16 @@ Begin
   btnSave.Visible           := False;
   btnTypeManagement.Enabled := False;
   btnTypeManagement.Visible := False;
-
+  btnSizeManagement.Enabled := False;
+  btnSizeManagement.Visible := False;
+  
   { Enable the listbox }
   lstbxItems.Enabled := True;
 
 End; { btnSaveClick Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.edtKeyPress                       (         Sender: TObject;
+Procedure TfrmPriceManagement.edtKeyPress                      (         Sender: TObject;
                                                                         Var Key: Char                  );
 Var
   ShowErrorMsgs : Boolean;
@@ -371,7 +390,7 @@ Begin
 End; { edtKeyPress Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.btnTypeManagementClick          (         Sender: TObject               );
+Procedure TfrmPriceManagement.btnTypeManagementClick           (         Sender: TObject               );
 Var
   ItemIDSelected : Integer;
 
@@ -396,6 +415,37 @@ Begin
 End; { btnTypeManagementClick Procedure }
 { ---------------------------------------------------------------------------- }
 
+Procedure TfrmPriceManagement.btnSizeManagementClick           (         Sender: TObject               );
+Var
+  ItemIDSelected : Integer;
+
+Begin
+
+  { Allow the user to add more types }
+  Application.CreateForm (TfrmSizeManagement, frmSizeManagement);
+  frmSizeManagement.ShowModal;
+  frmSizeManagement.Free;
+
+
+  { Remember which ID was selected }
+  ItemIDSelected := Integer (cbxSize.Items.Objects [cbxSize.ItemIndex]);
+
+  { Refresh the type list }
+  RefreshSizeList;
+
+  { If the type still exists, re-choose it for the user }
+  If (cbxSize.Items.IndexOfObject (TObject (ItemIDSelected)) > -1)
+    Then cbxSize.ItemIndex := cbxSize.Items.IndexOfObject (TObject (ItemIDSelected));
+
+End; { btnSizeManagementClick Procedure }
+{ ---------------------------------------------------------------------------- }
+
+
+
+
+
+
+
 
 
 
@@ -405,7 +455,7 @@ End; { btnTypeManagementClick Procedure }
 { ---------------------------- PRIVATE METHODS ------------------------------- }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmFlavorManagement.RefreshTypeList;
+Procedure TfrmPriceManagement.RefreshTypeList;
 Begin
 
   cbxType.Clear;
@@ -442,6 +492,42 @@ Begin
 End; { RefreshTypeList Procedure }
 { ---------------------------------------------------------------------------- }
 
+Procedure TfrmPriceManagement.RefreshSizeList;
+Begin
+
+  cbxSize.Clear;
+
+  { Insert the first option }
+  cbxSize.Items.AddObject ('Select a Size...', TObject (0));
+
+  { Auto select the first option }
+  cbxSize.ItemIndex := 0;
+
+
+  { Reload all of the popcorn sizes from the size table }
+  With dmApp Do Begin
+
+    qryAmana.SQL.Text := 'Select ID, Size From popcornsizes Order By Size;';
+
+    qryAmana.Open;
+
+    While (Not qryAmana.Eof) Do Begin
+
+      Application.ProcessMessages;
+
+      { Add a new object }
+      cbxSize.Items.AddObject (qryAmana.FieldByName ('Size').AsString, TObject (qryAmana.FieldByName ('ID').AsInteger));
+
+      qryAmana.Next;
+
+    End; { While }
+
+    qryAmana.Close;
+
+  End; { With dmApp }
+
+End; { RefreshSizeList Procedure }
+{ ---------------------------------------------------------------------------- }
 
 End.
 
