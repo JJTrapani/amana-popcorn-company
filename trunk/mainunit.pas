@@ -21,6 +21,8 @@ Type
   { TfrmMain }
 
   TfrmMain = Class (TForm)
+    mnuEditCopy                         : TMenuItem;
+    mnuEdit                             : TMenuItem;
     pmuEdit                             : TMenuItem;
     pmuRemove                           : TMenuItem;
     pmuAdd                              : TMenuItem;
@@ -43,6 +45,7 @@ Type
                                                     IsColumn: Boolean;
                                                        Index: Integer           );
     Procedure grdMainResize             (             Sender: TObject           );
+    Procedure mnuEditCopyClick          (             Sender: TObject           );
     Procedure mnuFileExitClick          (             Sender: TObject           );
     Procedure mnuManagementFlavorsClick (             Sender: TObject           );
     Procedure mnuManagementPricesClick  (             Sender: TObject           );
@@ -73,6 +76,7 @@ Implementation
 
 
 Uses
+  ClipBrd,
   DataModule,
   SizeManagementUnit,
   TypeManagementUnit,
@@ -191,6 +195,46 @@ Begin
     End; { For }
   End; { If grid is shown }
 End; { grdMainResize Procedure }
+{ ---------------------------------------------------------------------------- }
+
+Procedure TfrmMain.mnuEditCopyClick                            (         Sender: TObject               );
+Var
+  SelectedRect : TGridRect;
+  RowIndex     : Integer;
+  ColumnIndex  : Integer;
+  SelectedText : String;
+
+Begin
+
+  { Grab the selected part of the grid }
+  SelectedRect := grdMain.Selection;
+
+  { Initialize the text }
+  SelectedText := '';
+
+  For RowIndex := SelectedRect.Top To SelectedRect.Bottom Do Begin
+
+    For ColumnIndex := SelectedRect.Left To SelectedRect.Right Do Begin
+
+      SelectedText := SelectedText + grdMain.Cells [ColumnIndex, RowIndex];
+
+ //     If (False)
+ //       Then grdMain.Cells [ColumnIndex, RowIndex] := '';
+
+      If (ColumnIndex < SelectedRect.Right)
+        Then SelectedText := SelectedText + #9;
+
+    End; { For each Column }
+
+    If (RowIndex < SelectedRect.Bottom)
+      Then SelectedText := SelectedText + #13#10;
+
+  End; { For each Row }
+
+  If (SelectedText <> '')
+    Then ClipBoard.AsText := SelectedText;
+
+End; { mnuEditCopyClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.mnuFileExitClick                            (         Sender: TObject               );
