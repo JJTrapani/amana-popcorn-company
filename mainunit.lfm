@@ -35,6 +35,14 @@ object frmMain: TfrmMain
         OnClick = mnuFileExitClick
       end
     end
+    object mnuEdit: TMenuItem
+      Caption = '&Edit'
+      object mnuEditCopy: TMenuItem
+        Caption = '&Copy'
+        ShortCut = 16451
+        OnClick = mnuEditCopyClick
+      end
+    end
     object mnuManagement: TMenuItem
       Caption = '&Management'
       object mnuManagementSize: TMenuItem
