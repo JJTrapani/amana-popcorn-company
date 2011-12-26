@@ -8,10 +8,7 @@ Uses
   Classes,
   SysUtils,
   mysql50conn,
-  sqldb,
-  odbcconn,
-  FileUtil,
-  Dialogs;
+  sqldb;
 
 Type
 
@@ -20,7 +17,7 @@ Type
     dbAmana      : TMySQL50Connection;
     qryAmana     : TSQLQuery;
     qryQuick     : TSQLQuery;
-    qryAudit: TSQLQuery;
+    qryAudit     : TSQLQuery;
     sqlTran      : TSQLTransaction;
 
 
