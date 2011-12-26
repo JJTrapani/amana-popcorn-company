@@ -317,6 +317,20 @@ Begin
   grdMain.Clear;
 
   With dmApp Do Begin
+    qryAmana.SQL.Text := 'Select COUNT(popcornflavors.Flavor) As Number ' +
+
+                         'From popcornflavors ' +
+
+                         'Left Outer Join popcorntype On (popcorntype.ID = popcornflavors.Type_Ptr) ' +
+                         'Left Outer Join popcorntypeprices On (popcorntypeprices.Type_Ptr = popcornflavors.Type_Ptr) ' +
+                         'Left Outer Join popcornsizes On (popcornsizes.ID = popcorntypeprices.Size_Ptr) ';
+    qryAmana.Open;
+
+    { Set the number of rows on the grid, + the header row }
+    grdMain.RowCount := qryAmana.FieldByName ('Number').AsInteger + 1;
+
+    qryAmana.Close;
+
 
     qryAmana.SQL.Text := 'Select popcornflavors.Flavor, ' +
                                 'popcornflavors.Description, ' +
@@ -333,19 +347,10 @@ Begin
                          'Left Outer Join popcorntype On (popcorntype.ID = popcornflavors.Type_Ptr) ' +
                          'Left Outer Join popcorntypeprices On (popcorntypeprices.Type_Ptr = popcornflavors.Type_Ptr) ' +
                          'Left Outer Join popcornsizes On (popcornsizes.ID = popcorntypeprices.Size_Ptr) ' +
-                         'Order By popcorntype.Type, popcornsizes.ID, popcornflavors.Flavor ';
+                         'Order By popcorntype.Type, popcornflavors.Flavor, popcornsizes.ID ';
 
     qryAmana.Open;
 
-    { Reset the row count }
-    If (Not qryAmana.Eof)
-      Then begin
-        grdMain.RowCount := 11;
-
-        //Get the number of records we are returning...how?!?
-        ShowMessage (IntToStr (qryAmana.RecordCount));
-
-      end;
     { Initialize a default RowIndex }
     RowIndex := 0;
 
@@ -362,8 +367,6 @@ Begin
       { Set the next row }
       Inc (RowIndex);
 
-if rowindex < 11 then begin
-
       grdMain.Cells [GridColFlavor, RowIndex] := qryAmana.FieldByName ('Flavor').AsString;
       grdMain.Cells [GridColDesc, RowIndex]   := qryAmana.FieldByName ('Description').AsString;
       grdMain.Cells [GridColType, RowIndex]   := qryAmana.FieldByName ('Type').AsString;
@@ -373,8 +376,6 @@ if rowindex < 11 then begin
       grdMain.Cells [GridColDepth, RowIndex]  := IntToStr (qryAmana.FieldByName ('Depth').AsInteger);
       grdMain.Cells [GridColWidth, RowIndex]  := IntToStr (qryAmana.FieldByName ('Width').AsInteger);
       grdMain.Cells [GridColCups, RowIndex]   := IntToStr (qryAmana.FieldByName ('Cups').AsInteger);
-
-end;
 
       qryAmana.Next;
 
