@@ -53,7 +53,8 @@ Implementation
 {$R *.lfm}
 
 Uses
-  DataModule;
+  DataModule,
+  Global;
 
 
 

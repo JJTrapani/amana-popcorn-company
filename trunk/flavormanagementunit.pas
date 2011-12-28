@@ -68,6 +68,7 @@ Implementation
 
 Uses
   DataModule,
+  Global,
   TypeManagementUnit;
 
 
