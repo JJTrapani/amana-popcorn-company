@@ -78,6 +78,7 @@ Implementation
 Uses
   ClipBrd,
   DataModule,
+  Global,
   SizeManagementUnit,
   TypeManagementUnit,
   FlavorManagementUnit,
@@ -105,7 +106,14 @@ Const
 Procedure TfrmMain.FormCreate                                  (         Sender: TObject               );
 Begin
 
+  { Do not run the grdMain Resize procedure until AFTER the FormShow procedure }
   GridShown := False;
+
+  { Set the global variables }
+  APPLICATION_PATH := ExtractFilePath (Application.EXEName);
+
+  { Load our global settings }
+  LoadGlobalSettings (frmMain);
 
   { Create the datamodule to use throughout the application }
   Application.CreateForm (TdmApp, dmApp);
@@ -313,8 +321,17 @@ Begin
   { Free the data module }
   dmApp.Free;
 
+  { Save our global settings }
+  SaveGlobalSettings (frmMain);
+
 End; { FormClose Procedure }
 { ---------------------------------------------------------------------------- }
+
+
+
+
+
+
 
 { ---------------------------------------------------------------------------- }
 { ---------------------------- PRIVATE METHODS ------------------------------- }
