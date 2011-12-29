@@ -13,7 +13,7 @@ object frmMain: TfrmMain
   LCLVersion = '0.9.30'
   object grdMain: TStringGrid
     Left = 0
-    Height = 380
+    Height = 357
     Top = 0
     Width = 600
     Align = alClient
@@ -23,6 +23,17 @@ object frmMain: TfrmMain
     TabOrder = 0
     OnHeaderClick = grdMainHeaderClick
     OnResize = grdMainResize
+  end
+  object sBar: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 357
+    Width = 600
+    Panels = <    
+      item
+        Width = 500
+      end>
+    SimplePanel = False
   end
   object mnu: TMainMenu
     left = 40

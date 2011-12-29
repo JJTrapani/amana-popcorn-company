@@ -14,9 +14,11 @@ uses
 {$R *.res}
 
 begin
+
   Application.Title := 'Amana Popcorn Company Content Management System';
   Application.Initialize;
   Application.CreateForm (TfrmMain, frmMain);
   Application.Run;
+
 end.
 
