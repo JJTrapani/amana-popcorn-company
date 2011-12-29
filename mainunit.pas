@@ -13,7 +13,8 @@ Uses
   Graphics,
   Dialogs,
   Menus,
-  Grids;
+  Grids,
+  ComCtrls;
 
 
 Type
@@ -36,6 +37,7 @@ Type
     mnu                                 : TMainMenu;
     grdMain                             : TStringGrid;
     pmu                                 : TPopupMenu;
+    sBar                                : TStatusBar;
 
 
 
@@ -82,7 +84,8 @@ Uses
   SizeManagementUnit,
   TypeManagementUnit,
   FlavorManagementUnit,
-  PriceManagementUnit;
+  PriceManagementUnit,
+  SaleItemUnit;
 
 
 Const
@@ -226,9 +229,6 @@ Begin
 
       SelectedText := SelectedText + grdMain.Cells [ColumnIndex, RowIndex];
 
- //     If (False)
- //       Then grdMain.Cells [ColumnIndex, RowIndex] := '';
-
       If (ColumnIndex < SelectedRect.Right)
         Then SelectedText := SelectedText + #9;
 
@@ -297,13 +297,33 @@ End; { mnuManagementTypesClick Procedure }
 Procedure TfrmMain.pmuAddClick                                 (         Sender: TObject               );
 Begin
 
-  ResetColumnHeader;
+  { Create, display, and free the form }
+  Application.CreateForm (TfrmSaleItem, frmSaleItem);
+
+  If (frmSaleItem.ShowModal = mrOK)
+    Then RefreshGridData;
+
+  frmSaleItem.Free;
 
 End; { pmuAddClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.pmuEditClick                                (         Sender: TObject               );
 Begin
+
+  { Create, display, and free the form }
+  Application.CreateForm (TfrmSaleItem, frmSaleItem);
+
+  { TODO JJT !!! }
+  { Pass over the variables to load into the new form }
+  frmSaleItem.PassInFlavor := 0;
+  frmSaleItem.PassInSize   := 0;
+  frmSaleItem.PassInPrice  := 0;
+
+  If (frmSaleItem.ShowModal = mrOK)
+    Then RefreshGridData;
+
+  frmSaleItem.Free;
 
 End; { pmuEditClick Procedure }
 { ---------------------------------------------------------------------------- }
@@ -423,6 +443,7 @@ Begin
 
     While (Not qryAmana.Eof) Do Begin
 
+      sBar.Panels [0].Text := 'Processing ' + qryAmana.FieldByName ('Flavor').AsString;
       Application.ProcessMessages;
 
       { Set the next row }
@@ -443,6 +464,8 @@ Begin
     End; { While }
 
     qryAmana.Close;
+
+    sBar.Panels [0].Text := 'Idle...';
 
   End; { With dmApp }
 

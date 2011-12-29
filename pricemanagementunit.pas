@@ -122,7 +122,7 @@ Begin
 
     { Load the type and size lists }
     RefreshTypeList;
-	RefreshSizeList;
+    RefreshSizeList;
 	
   End; { With dmApp }
 
