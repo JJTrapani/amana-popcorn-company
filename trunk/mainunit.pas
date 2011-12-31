@@ -89,17 +89,20 @@ Uses
 
 
 Const
-  GridColCount = 9;
+  GridColCount = 12;
 
-  GridColFlavor = 0;
-  GridColDesc   = 1;
-  GridColType   = 2;
-  GridColPrice  = 3;
-  GridColSize   = 4;
-  GridColHeight = 5;
-  GridColDepth  = 6;
-  GridColWidth  = 7;
-  GridColCups   = 8;
+  GridColFlavor   = 0;
+  GridColDesc     = 1;
+  GridColType     = 2;
+  GridColPrice    = 3;
+  GridColSize     = 4;
+  GridColHeight   = 5;
+  GridColDepth    = 6;
+  GridColWidth    = 7;
+  GridColCups     = 8;
+  GridColFlavorID = 9;
+  GridColSizeID   = 10;
+  GridColPriceID  = 11;
 
 
 { ---------------------------------------------------------------------------- }
@@ -190,11 +193,13 @@ Begin
     { Init total column widths }
     TotalColumnWidths := 0;
 
-    For Index := 0 To grdMain.ColCount - 1 Do Begin
-      TotalColumnWidths := TotalColumnWidths + grdMain.Columns [Index].Width;
-    End; { For }
+    { Get the total for all the column width (-4 means to EXCLUDE THE ID HOLDER COLUMNS) }
+    For Index := 0 To grdMain.ColCount - 4
+      Do TotalColumnWidths := TotalColumnWidths + grdMain.Columns [Index].Width;
 
-    For Index := 0 To grdMain.ColCount - 1 Do Begin
+
+
+    For Index := 0 To grdMain.ColCount - 4 Do Begin
 
       { Use it as a percentage, and round down }
       grdMain.Columns [Index].Width := Trunc ((grdMain.Columns [Index].Width / TotalColumnWidths) * frmMain.Width);
@@ -361,29 +366,36 @@ Procedure TfrmMain.ResetColumnHeader                           (         NumberO
 Begin
 
   { Add a new row }
-  grdMain.RowCount := NumberOfRows ;
+  grdMain.RowCount := NumberOfRows;
 
   { Set up the default column widths }
-  grdMain.Columns [GridColFlavor ].Width := 100;
-  grdMain.Columns [GridColDesc   ].Width := 300;
-  grdMain.Columns [GridColType   ].Width := 100;
-  grdMain.Columns [GridColPrice  ].Width := 80;
-  grdMain.Columns [GridColSize   ].Width := 40;
-  grdMain.Columns [GridColHeight ].Width := 40;
-  grdMain.Columns [GridColDepth  ].Width := 40;
-  grdMain.Columns [GridColWidth  ].Width := 40;
-  grdMain.Columns [GridColCups   ].Width := 50;
+  grdMain.Columns [GridColFlavor   ].Width := 100;
+  grdMain.Columns [GridColDesc     ].Width := 300;
+  grdMain.Columns [GridColType     ].Width := 100;
+  grdMain.Columns [GridColPrice    ].Width := 80;
+  grdMain.Columns [GridColSize     ].Width := 40;
+  grdMain.Columns [GridColHeight   ].Width := 40;
+  grdMain.Columns [GridColDepth    ].Width := 40;
+  grdMain.Columns [GridColWidth    ].Width := 40;
+  grdMain.Columns [GridColCups     ].Width := 50;
+  grdMain.Columns [GridColFlavorID ].Width := 0;
+  grdMain.Columns [GridColSizeID   ].Width := 0;
+  grdMain.Columns [GridColPriceID  ].Width := 0;
+
 
   { Set up the default column text }
-  grdMain.Columns [GridColFlavor ].Title.Caption := 'Flavor';
-  grdMain.Columns [GridColDesc   ].Title.Caption := 'Description';
-  grdMain.Columns [GridColType   ].Title.Caption := 'Type';
-  grdMain.Columns [GridColPrice  ].Title.Caption := 'Price';
-  grdMain.Columns [GridColSize   ].Title.Caption := 'Size';
-  grdMain.Columns [GridColHeight ].Title.Caption := 'Height';
-  grdMain.Columns [GridColDepth  ].Title.Caption := 'Depth';
-  grdMain.Columns [GridColWidth  ].Title.Caption := 'Width';
-  grdMain.Columns [GridColCups   ].Title.Caption := 'Cups';
+  grdMain.Columns [GridColFlavor   ].Title.Caption := 'Flavor';
+  grdMain.Columns [GridColDesc     ].Title.Caption := 'Description';
+  grdMain.Columns [GridColType     ].Title.Caption := 'Type';
+  grdMain.Columns [GridColPrice    ].Title.Caption := 'Price';
+  grdMain.Columns [GridColSize     ].Title.Caption := 'Size';
+  grdMain.Columns [GridColHeight   ].Title.Caption := 'Height';
+  grdMain.Columns [GridColDepth    ].Title.Caption := 'Depth';
+  grdMain.Columns [GridColWidth    ].Title.Caption := 'Width';
+  grdMain.Columns [GridColCups     ].Title.Caption := 'Cups';
+  grdMain.Columns [GridColFlavorID ].Title.Caption := 'FlavorID';
+  grdMain.Columns [GridColSizeID   ].Title.Caption := 'SizeID';
+  grdMain.Columns [GridColPriceID  ].Title.Caption := 'PriceID';
 
 End; { ResetColumnHeader }
 { ---------------------------------------------------------------------------- }
@@ -413,10 +425,15 @@ Begin
     qryAmana.Close;
 
 
-    qryAmana.SQL.Text := 'Select popcornflavors.Flavor, ' +
+    qryAmana.SQL.Text := 'Select popcornflavors.ID As Flavor_ID, ' +
+                                'popcornflavors.Flavor, ' +
                                 'popcornflavors.Description, ' +
                                 'popcorntype.Type, ' +
+
+                                'popcorntypeprices.ID As Price_ID, ' +
                                 'popcorntypeprices.Price, ' +
+
+                                'popcornsizes.ID As Size_ID, ' +
                                 'popcornsizes.Size, ' +
                                 'popcornsizes.Height, ' +
                                 'popcornsizes.Depth, ' +
@@ -449,15 +466,19 @@ Begin
       { Set the next row }
       Inc (RowIndex);
 
-      grdMain.Cells [GridColFlavor, RowIndex] := qryAmana.FieldByName ('Flavor').AsString;
-      grdMain.Cells [GridColDesc, RowIndex]   := qryAmana.FieldByName ('Description').AsString;
-      grdMain.Cells [GridColType, RowIndex]   := qryAmana.FieldByName ('Type').AsString;
-      grdMain.Cells [GridColPrice, RowIndex]  := '$' + FormatFloat ('0.00', qryAmana.FieldByName ('Price').AsFloat);
-      grdMain.Cells [GridColSize, RowIndex]   := qryAmana.FieldByName ('Size').AsString;
-      grdMain.Cells [GridColHeight, RowIndex] := IntToStr (qryAmana.FieldByName ('Height').AsInteger);
-      grdMain.Cells [GridColDepth, RowIndex]  := IntToStr (qryAmana.FieldByName ('Depth').AsInteger);
-      grdMain.Cells [GridColWidth, RowIndex]  := IntToStr (qryAmana.FieldByName ('Width').AsInteger);
-      grdMain.Cells [GridColCups, RowIndex]   := IntToStr (qryAmana.FieldByName ('Cups').AsInteger);
+
+      grdMain.Cells [GridColFlavor, RowIndex]   := qryAmana.FieldByName ('Flavor').AsString;
+      grdMain.Cells [GridColDesc, RowIndex]     := qryAmana.FieldByName ('Description').AsString;
+      grdMain.Cells [GridColType, RowIndex]     := qryAmana.FieldByName ('Type').AsString;
+      grdMain.Cells [GridColPrice, RowIndex]    := '$' + FormatFloat ('0.00', qryAmana.FieldByName ('Price').AsFloat);
+      grdMain.Cells [GridColSize, RowIndex]     := qryAmana.FieldByName ('Size').AsString;
+      grdMain.Cells [GridColHeight, RowIndex]   := IntToStr (qryAmana.FieldByName ('Height').AsInteger);
+      grdMain.Cells [GridColDepth, RowIndex]    := IntToStr (qryAmana.FieldByName ('Depth').AsInteger);
+      grdMain.Cells [GridColWidth, RowIndex]    := IntToStr (qryAmana.FieldByName ('Width').AsInteger);
+      grdMain.Cells [GridColCups, RowIndex]     := IntToStr (qryAmana.FieldByName ('Cups').AsInteger);
+      grdMain.Cells [GridColFlavorID, RowIndex] := IntToStr (qryAmana.FieldByName ('Flavor_ID').AsInteger);
+      grdMain.Cells [GridColSizeID, RowIndex]   := IntToStr (qryAmana.FieldByName ('Size_ID').AsInteger);
+      grdMain.Cells [GridColPriceID, RowIndex]  := IntToStr (qryAmana.FieldByName ('Price_ID').AsInteger);
 
       qryAmana.Next;
 

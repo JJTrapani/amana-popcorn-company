@@ -160,7 +160,7 @@ End; { cbxFlavorSelect Procedure }
 Procedure TfrmSaleItem.cbxSizeSelect                           (         Sender: TObject               );
 Begin
 
-  If (cbxFlavor.ItemIndex > 0) Then Begin
+  If (cbxSize.ItemIndex > 0) Then Begin
 
     cbxPrice.Enabled := True;
     RefreshPriceList;

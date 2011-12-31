@@ -1,21 +1,21 @@
 object frmSaleItem: TfrmSaleItem
   Left = 355
-  Height = 341
+  Height = 188
   Top = 198
   Width = 478
   Caption = 'Sale Item'
-  ClientHeight = 341
+  ClientHeight = 188
   ClientWidth = 478
   OnShow = FormShow
   LCLVersion = '0.9.30'
   object gbDetails: TGroupBox
     Left = 0
-    Height = 341
+    Height = 188
     Top = 0
     Width = 478
     Align = alClient
     Caption = 'Details'
-    ClientHeight = 323
+    ClientHeight = 170
     ClientWidth = 474
     TabOrder = 0
     object cbxFlavor: TComboBox
