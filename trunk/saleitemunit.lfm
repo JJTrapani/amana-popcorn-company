@@ -6,6 +6,7 @@ object frmSaleItem: TfrmSaleItem
   Caption = 'Sale Item'
   ClientHeight = 188
   ClientWidth = 478
+  OnCreate = FormCreate
   OnShow = FormShow
   LCLVersion = '0.9.30'
   object gbDetails: TGroupBox

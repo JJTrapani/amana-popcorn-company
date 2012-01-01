@@ -38,8 +38,7 @@ Type
     pnlBot              : TPanel;
 
 
-
-
+    Procedure FormCreate               (              Sender: TObject           );
     Procedure FormShow                 (              Sender: TObject           );
     Procedure cbxFlavorSelect          (              Sender: TObject           );
     Procedure cbxSizeSelect            (              Sender: TObject           );
@@ -86,7 +85,7 @@ Uses
 { ---------------------- FORM-INDUCED PUBLIC METHODS -------------------------- }
 { ----------------------------------------------------------------------------- }
 
-Procedure TfrmSaleItem.FormShow                                (         Sender: TObject               );
+Procedure TfrmSaleItem.FormCreate                              (         Sender: TObject               );
 Begin
 
   { Initialize these internal values as zero }
@@ -106,17 +105,29 @@ Begin
   btnSizeManagement.Enabled   := True;
   btnSizeManagement.Visible   := True;
 
+End; { FormCreate Procedure }
+{ ---------------------------------------------------------------------------- }
+
+Procedure TfrmSaleItem.FormShow                                (         Sender: TObject               );
+Begin
+
   { Refresh the flavor list... }
   RefreshFlavorList;
 
   { If we are editting a record, attempt to load its data when showing the form }
   If (Flavor_ID > 0) And
      (cbxFlavor.Items.IndexOfObject (TObject (Flavor_ID)) > -1) Then Begin
+
+    { Select the flavor item and load the size list }
     cbxFlavor.ItemIndex := cbxFlavor.Items.IndexOfObject (TObject (Flavor_ID));
+    RefreshSizeList;
 
     If (Size_ID > 0) And
        (cbxSize.Items.IndexOfObject (TObject (Size_ID)) > -1) Then Begin
+
+      { Select the size item and load the price list }
       cbxSize.ItemIndex := cbxSize.Items.IndexOfObject (TObject (Size_ID));
+      RefreshPriceList;
 
       If (Price_ID > 0) And
          (cbxPrice.Items.IndexOfObject (TObject (Price_ID)) > -1)
@@ -461,7 +472,7 @@ Begin
         Application.ProcessMessages;
 
         { Add a new object }
-        cbxPrice.Items.AddObject (qryAmana.FieldByName ('Price').AsString, TObject (qryAmana.FieldByName ('ID').AsInteger));
+        cbxPrice.Items.AddObject ('$' + qryAmana.FieldByName ('Price').AsString, TObject (qryAmana.FieldByName ('ID').AsInteger));
 
         qryAmana.Next;
 
