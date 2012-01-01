@@ -22,6 +22,7 @@ object frmMain: TfrmMain
     PopupMenu = pmu
     TabOrder = 0
     OnHeaderClick = grdMainHeaderClick
+    OnMouseDown = FocusCellLikeLeftClick
     OnResize = grdMainResize
   end
   object sBar: TStatusBar

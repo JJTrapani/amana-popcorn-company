@@ -46,6 +46,11 @@ Type
     Procedure grdMainHeaderClick        (             Sender: TObject;
                                                     IsColumn: Boolean;
                                                        Index: Integer           );
+    Procedure FocusCellLikeLeftClick    (             Sender: TObject;
+                                                      Button: TMouseButton;
+                                                       Shift: TShiftState;
+                                                           X: Integer;
+                                                           Y: Integer           );
     Procedure grdMainResize             (             Sender: TObject           );
     Procedure mnuEditCopyClick          (             Sender: TObject           );
     Procedure mnuFileExitClick          (             Sender: TObject           );
@@ -178,7 +183,42 @@ Begin
 
   End; { If the user clicked on a column }
 
-End; { grdMainHeaderClick }
+End; { grdMainHeaderClick Procedure }
+{ ---------------------------------------------------------------------------- }
+
+Procedure TfrmMain.FocusCellLikeLeftClick                      (         Sender: TObject;
+                                                                         Button: TMouseButton;
+                                                                          Shift: TShiftState;
+                                                                              X: Integer;
+                                                                              Y: Integer               );
+Var
+  SelectedCol : Integer;
+  SelectedRow : Integer;
+
+Begin
+
+  { If the user right clicked on the grid }
+  If (Button = mbRight) Then Begin
+
+    { Initialize the col/rows }
+    SelectedCol := 0;
+    SelectedRow := 0;
+
+    { Get the col/row of the right click action }
+    grdMain.MouseToCell (X, Y, SelectedCol, SelectedRow);
+
+    { Clear the previously selected rect }
+    grdMain.Selection := TGridRect (Rect (-1, -1, -1, -1));
+
+    { Force the selection of this cell }
+    grdMain.Col := SelectedCol;
+    grdMain.Row := SelectedRow;
+
+    grdMain.SetFocus;
+
+  End;
+
+End; { FocusCellLikeLeftClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.grdMainResize                               (         Sender: TObject               );
@@ -314,27 +354,88 @@ End; { pmuAddClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.pmuEditClick                                (         Sender: TObject               );
+Var
+  RowIndex     : Integer;
+
 Begin
 
-  { Create, display, and free the form }
-  Application.CreateForm (TfrmSaleItem, frmSaleItem);
+  { If the user selected an cell on the grid }
+  If (grdMain.Selection.Top > 0) Then Begin
 
-  { TODO JJT !!! }
-  { Pass over the variables to load into the new form }
-  frmSaleItem.PassInFlavor := 0;
-  frmSaleItem.PassInSize   := 0;
-  frmSaleItem.PassInPrice  := 0;
+    { Create, display, and free the form }
+    Application.CreateForm (TfrmSaleItem, frmSaleItem);
 
-  If (frmSaleItem.ShowModal = mrOK)
-    Then RefreshGridData;
+    { Get the FIRST selected row }
+    RowIndex := grdMain.Selection.Top;
 
-  frmSaleItem.Free;
+    frmSaleItem.PassInFlavor := StrToInt (grdMain.Cells [GridColFlavorID, RowIndex]);
+    frmSaleItem.PassInSize   := StrToInt (grdMain.Cells [GridColSizeID, RowIndex]);
+    frmSaleItem.PassInPrice  := StrToInt (grdMain.Cells [GridColPriceID, RowIndex]);
+
+    { Refresh the grid's data }
+    If (frmSaleItem.ShowModal = mrOK)
+      Then RefreshGridData;
+
+    { Free the form }
+    frmSaleItem.Free;
+
+  End; { If the user selected a part of the form }
 
 End; { pmuEditClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.pmuRemoveClick                              (         Sender: TObject               );
+Var
+  RowIndex : Integer;
+  FlavorID : Integer;
+  SizeID   : Integer;
+  PriceID  : Integer;
+
 Begin
+
+  { Initialize the IDs }
+  FlavorID := 0;
+  SizeID   := 0;
+  PriceID  := 0;
+
+  { If the user selected an cell on the grid }
+  If (grdMain.Selection.Top > 0) Then Begin
+
+    { Get the FIRST selected row }
+    RowIndex := grdMain.Selection.Top;
+
+    FlavorID := StrToInt (grdMain.Cells [GridColFlavorID, RowIndex]);
+    SizeID   := StrToInt (grdMain.Cells [GridColSizeID, RowIndex]);
+    PriceID  := StrToInt (grdMain.Cells [GridColPriceID, RowIndex]);
+
+  End; { Get the selected row }
+
+
+  { Ensure that the user wants to continue }
+  If ((FlavorID > 0) Or
+      (SizeID > 0) Or
+      (PriceID > 0)) And
+
+     (MessageDlg ('Question', 'Do you wish to remove this item (it cannot be undone)?', mtConfirmation, [mbYes, mbNo],0) = mrYes) Then Begin
+
+    { Use datamodule }
+    With dmApp Do Begin
+
+      Try
+        qryAmana.SQL.Text := '';
+
+        qryAmana.ExecSQL;
+
+        { Add audit trail record }
+
+      Except
+        On E : Exception
+          Do ShowMessage (E.Message);
+      End; { Try }
+
+    End; { With dmApp }
+
+  End; { If the user agrees to coninue }
 
 End; { pmuRemoveClick Procedure }
 { ---------------------------------------------------------------------------- }
