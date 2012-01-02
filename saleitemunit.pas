@@ -116,7 +116,8 @@ Begin
 
   { If we are editting a record, attempt to load its data when showing the form }
   If (Flavor_ID > 0) And
-     (cbxFlavor.Items.IndexOfObject (TObject (Flavor_ID)) > -1) Then Begin
+     (cbxFlavor.Items.IndexOfObject (TObject (Flavor_ID)) > -1) And
+     (Pos ('(NO TYPE LINKED TO FLAVOR)-', cbxFlavor.Items.Strings [cbxFlavor.Items.IndexOfObject (TObject (Flavor_ID))]) = 0)  Then Begin
 
     { Select the flavor item and load the size list }
     cbxFlavor.ItemIndex := cbxFlavor.Items.IndexOfObject (TObject (Flavor_ID));
@@ -138,6 +139,18 @@ Begin
       cbxPrice.Enabled := False;
 
   End
+
+  Else If (Pos ('(NO TYPE LINKED TO FLAVOR)-', cbxFlavor.Items.Strings [cbxFlavor.Items.IndexOfObject (TObject (Flavor_ID))]) > 0) Then Begin
+    ShowMessage ('In order to edit this record, go into Flavor Management and re-link this flavor to a type.');
+
+    { Select the item from the list }
+    cbxFlavor.ItemIndex := cbxFlavor.Items.IndexOfObject (TObject (Flavor_ID));
+
+    { Disable the size }
+    cbxSize.Enabled  := False;
+    cbxPrice.Enabled := False;
+  End
+
   Else Begin
     cbxSize.Enabled  := False;
     cbxPrice.Enabled := False;
@@ -149,11 +162,25 @@ End; { FormShow Procedure }
 Procedure TfrmSaleItem.cbxFlavorSelect                         (         Sender: TObject               );
 Begin
 
-  If (cbxFlavor.ItemIndex > 0) Then Begin
+  { If the selected flavor is linked to a type, proceed with allowing the user to select a size }
+  If (cbxFlavor.ItemIndex > 0) And
+     (Pos ('(NO TYPE LINKED TO FLAVOR)-', cbxFlavor.Items.Strings [cbxFlavor.ItemIndex]) = 0) Then Begin
 
     cbxSize.Enabled := True;
     RefreshSizeList;
 
+  End
+
+  { If the user selected a deactivated flavor }
+  Else If (Pos ('(NO TYPE LINKED TO FLAVOR)-',
+                 cbxFlavor.Items.Strings [cbxFlavor.ItemIndex]) > 0) Then Begin
+    ShowMessage ('In order to edit this record, go into Flavor Management and re-link this flavor to a type.');
+
+    cbxSize.Clear;
+    cbxSize.Enabled := False;
+
+    cbxPrice.Clear;
+    cbxPrice.Enabled := False;
   End
   Else Begin
 
@@ -272,8 +299,10 @@ Begin
   RefreshFlavorList;
 
   { If the flavor still exists, re-choose it for the user }
-  If (cbxFlavor.Items.IndexOfObject (TObject (ItemIDSelected)) > -1)
-    Then cbxFlavor.ItemIndex := cbxFlavor.Items.IndexOfObject (TObject (ItemIDSelected));
+  If (cbxFlavor.Items.IndexOfObject (TObject (ItemIDSelected)) > -1) Then Begin
+    cbxFlavor.ItemIndex := cbxFlavor.Items.IndexOfObject (TObject (ItemIDSelected));
+    cbxFlavorSelect (Nil);
+  End;
 
 End; { btnFlavorManagementClick Procedure }
 { ---------------------------------------------------------------------------- }
@@ -357,7 +386,7 @@ Begin
   { Reload all of the applicable Popcorn Flavor from the table }
   With dmApp Do Begin
 
-    qryAmana.SQL.Text := 'Select popcornflavors.ID, popcornflavors.Flavor, popcorntype.Type From popcornflavors Inner Join popcorntype On (popcorntype.ID = popcornflavors.Type_Ptr) Order By popcorntype.Type, popcornflavors.Flavor;';
+    qryAmana.SQL.Text := 'Select popcornflavors.ID, popcornflavors.Flavor, popcorntype.Type From popcornflavors Left Outer Join popcorntype On (popcorntype.ID = popcornflavors.Type_Ptr) Order By popcorntype.Type, popcornflavors.Flavor;';
 
     qryAmana.Open;
 
@@ -366,7 +395,12 @@ Begin
       Application.ProcessMessages;
 
       { Add a new object }
-      cbxFlavor.Items.AddObject (qryAmana.FieldByName ('Type').AsString + '-' + qryAmana.FieldByName ('Flavor').AsString, TObject (qryAmana.FieldByName ('ID').AsInteger));
+      If (qryAmana.FieldByName ('Type').AsString <> '')
+        Then cbxFlavor.Items.AddObject (qryAmana.FieldByName ('Type').AsString + '-' + qryAmana.FieldByName ('Flavor').AsString, TObject (qryAmana.FieldByName ('ID').AsInteger))
+
+      Else If (qryAmana.FieldByName ('Type').AsString = '') And
+              (Not ONLY_SHOW_ACTIVE)
+        Then cbxFlavor.Items.AddObject ('(NO TYPE LINKED TO FLAVOR)-' + qryAmana.FieldByName ('Flavor').AsString, TObject (qryAmana.FieldByName ('ID').AsInteger));
 
       qryAmana.Next;
 
