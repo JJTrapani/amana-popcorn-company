@@ -232,9 +232,6 @@ Begin
 
       qryAmana.SQL.Text := 'Insert Into popcorntype (Type) Values (''' + CleanQueryVarStr (edtType.Text) + ''');';
 
-      { Add a record to the audit trail }
-      AddAuditTrailRecord (qryAmana.SQL.Text);
-
       { Insert, then open the SQL query }
       qryAmana.ExecSQL;
       qryAmana.SQL.Text := 'Select Last_Insert_ID() As ID;';

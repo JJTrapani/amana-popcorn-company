@@ -78,8 +78,18 @@ object frmMain: TfrmMain
         OnClick = mnuManagementPricesClick
       end
     end
+    object mnuOptions: TMenuItem
+      Caption = '&Options'
+      object mnuOptionsActive: TMenuItem
+        AutoCheck = True
+        Caption = 'Only Show &Active Flavors'
+        Default = True
+        OnClick = mnuOptionsActiveClick
+      end
+    end
   end
   object pmu: TPopupMenu
+    OnPopup = pmuPopup
     left = 8
     top = 8
     object pmuAdd: TMenuItem
@@ -92,10 +102,10 @@ object frmMain: TfrmMain
       ShortCut = 16453
       OnClick = pmuEditClick
     end
-    object pmuRemove: TMenuItem
-      Caption = '&Remove'
+    object pmuDeactivateFlavor: TMenuItem
+      Caption = '&Deactivate Flavor'
       ShortCut = 16466
-      OnClick = pmuRemoveClick
+      OnClick = pmuDeactivateFlavorClick
     end
   end
 end
