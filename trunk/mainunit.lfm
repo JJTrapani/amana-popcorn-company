@@ -41,6 +41,10 @@ object frmMain: TfrmMain
     top = 8
     object mnuFile: TMenuItem
       Caption = '&File'
+      object mnuFileRefresh: TMenuItem
+        Caption = '&Refresh'
+        OnClick = mnuFileRefreshClick
+      end
       object mnuFileExit: TMenuItem
         Caption = '&Exit'
         ShortCut = 16465
@@ -92,6 +96,11 @@ object frmMain: TfrmMain
     OnPopup = pmuPopup
     left = 8
     top = 8
+    object pmuRefresh: TMenuItem
+      Caption = '&Refresh'
+      ShortCut = 16466
+      OnClick = pmuRefreshClick
+    end
     object pmuAdd: TMenuItem
       Caption = 'A&dd'
       ShortCut = 16452

@@ -22,6 +22,8 @@ Type
   { TfrmMain }
 
   TfrmMain = Class (TForm)
+    mnuFileRefresh                      : TMenuItem;
+    pmuRefresh                          : TMenuItem;
     mnuOptionsActive                    : TMenuItem;
     mnuOptions                          : TMenuItem;
     mnuEditCopy                         : TMenuItem;
@@ -54,6 +56,7 @@ Type
                                                            X: Integer;
                                                            Y: Integer           );
     Procedure grdMainResize             (             Sender: TObject           );
+    Procedure mnuFileRefreshClick       (             Sender: TObject           );
     Procedure mnuOptionsActiveClick     (             Sender: TObject           );
     Procedure mnuEditCopyClick          (             Sender: TObject           );
     Procedure mnuFileExitClick          (             Sender: TObject           );
@@ -66,7 +69,8 @@ Type
     Procedure pmuDeactivateFlavorClick  (             Sender: TObject           );
     Procedure FormClose                 (             Sender: TObject;
                                              Var CloseAction: TCloseAction      );
-    procedure pmuPopup(Sender: TObject);
+    Procedure pmuPopup                  (             Sender: TObject           );
+    Procedure pmuRefreshClick           (             Sender: TObject           );
 
     Private
       GridShown : Boolean;
@@ -260,7 +264,18 @@ Begin
 
     End; { For }
   End; { If grid is shown }
+
 End; { grdMainResize Procedure }
+{ ---------------------------------------------------------------------------- }
+
+Procedure TfrmMain.mnuFileRefreshClick                         (         Sender: TObject               );
+Begin
+
+  { Reload the grid data, if the query isn't busy }
+  If (Not dmApp.qryAmana.Active)
+    Then RefreshGridData;
+
+End; { mnuFileRefreshClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.mnuOptionsActiveClick                       (         Sender: TObject               );
@@ -528,6 +543,15 @@ Begin
 End; { pmuPopup Procedure }
 { ---------------------------------------------------------------------------- }
 
+Procedure TfrmMain.pmuRefreshClick                             (         Sender: TObject               );
+Begin
+
+  { Click the file refresh button }
+  mnuFileRefresh.Click;
+
+End; { pmuRefreshClick Procedure }
+{ ---------------------------------------------------------------------------- }
+
 
 
 
@@ -608,7 +632,6 @@ Begin
 
     qryAmana.Close;
 
-
     qryAmana.SQL.Text := 'Select popcornflavors.ID As Flavor_ID, ' +
                                 'popcornflavors.Flavor, ' +
                                 'popcornflavors.Description, ' +
@@ -644,7 +667,6 @@ Begin
       Then ResetColumnHeader (grdMain.RowCount)
       Else ResetColumnHeader (1);
 
-
     While (Not qryAmana.Eof) Do Begin
 
       sBar.Panels [0].Text := 'Processing ' + qryAmana.FieldByName ('Flavor').AsString;
@@ -652,7 +674,6 @@ Begin
 
       { Set the next row }
       Inc (RowIndex);
-
 
       grdMain.Cells [GridColFlavor, RowIndex]   := qryAmana.FieldByName ('Flavor').AsString;
       grdMain.Cells [GridColDesc, RowIndex]     := qryAmana.FieldByName ('Description').AsString;
