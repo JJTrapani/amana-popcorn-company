@@ -34,6 +34,7 @@ CREATE TABLE PopcornFlavors(
 	Flavor varchar(70) NOT NULL,
 	Description varchar(250) NULL,
 	Type_Ptr int NOT NULL,
+	Active smallint(1) NULL DEFAULT 1,
     PRIMARY KEY (ID),
 	UNIQUE (ID)
 );
@@ -81,6 +82,7 @@ CREATE TABLE PopcornFlavorsAudit(
 	Flavor varchar(70) NOT NULL,
 	Description varchar(250) NULL,
 	Type_Ptr int NOT NULL,
+	Active smallint(1) NULL DEFAULT 1,
 	ID_Ptr int,
 	ChangedOn DATETIME NULL,
 	PRIMARY KEY (ID),
