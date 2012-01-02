@@ -211,9 +211,6 @@ Begin
 
       qryAmana.SQL.Text := 'Insert Into popcorntypeprices (Price, Type_Ptr, Size_Ptr) Values (''' + CleanQueryVarStr (edtPrice.Text) + ''',' + IntToStr (Integer (cbxSize.Items.Objects [cbxSize.ItemIndex])) + ',' + IntToStr (Integer (cbxPrice.Items.Objects [cbxPrice.ItemIndex])) + ');';
 
-      { Add a record to the audit trail }
-      AddAuditTrailRecord (qryAmana.SQL.Text);
-
       { Insert, then open the SQL query }
       qryAmana.ExecSQL;
       qryAmana.SQL.Text := 'Select Last_Insert_ID() As ID;';

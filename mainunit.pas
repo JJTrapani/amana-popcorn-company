@@ -22,10 +22,12 @@ Type
   { TfrmMain }
 
   TfrmMain = Class (TForm)
+    mnuOptionsActive                    : TMenuItem;
+    mnuOptions                          : TMenuItem;
     mnuEditCopy                         : TMenuItem;
     mnuEdit                             : TMenuItem;
     pmuEdit                             : TMenuItem;
-    pmuRemove                           : TMenuItem;
+    pmuDeactivateFlavor                 : TMenuItem;
     pmuAdd                              : TMenuItem;
     mnuManagementPrices                 : TMenuItem;
     mnuManagementTypes                  : TMenuItem;
@@ -52,6 +54,7 @@ Type
                                                            X: Integer;
                                                            Y: Integer           );
     Procedure grdMainResize             (             Sender: TObject           );
+    Procedure mnuOptionsActiveClick     (             Sender: TObject           );
     Procedure mnuEditCopyClick          (             Sender: TObject           );
     Procedure mnuFileExitClick          (             Sender: TObject           );
     Procedure mnuManagementFlavorsClick (             Sender: TObject           );
@@ -60,9 +63,10 @@ Type
     Procedure mnuManagementTypesClick   (             Sender: TObject           );
     Procedure pmuAddClick               (             Sender: TObject           );
     Procedure pmuEditClick              (             Sender: TObject           );
-    Procedure pmuRemoveClick            (             Sender: TObject           );
+    Procedure pmuDeactivateFlavorClick  (             Sender: TObject           );
     Procedure FormClose                 (             Sender: TObject;
                                              Var CloseAction: TCloseAction      );
+    procedure pmuPopup(Sender: TObject);
 
     Private
       GridShown : Boolean;
@@ -123,8 +127,14 @@ Begin
   { Set the global variables }
   APPLICATION_PATH := ExtractFilePath (Application.EXEName);
 
+  { Initially, only show the active flavors }
+  ONLY_SHOW_ACTIVE := True;
+
   { Load our global settings }
   LoadGlobalSettings (frmMain);
+
+  { After loading in the settings, check/uncheck the active switch }
+  mnuOptionsActive.Checked := ONLY_SHOW_ACTIVE;
 
   { Create the datamodule to use throughout the application }
   Application.CreateForm (TdmApp, dmApp);
@@ -253,6 +263,17 @@ Begin
 End; { grdMainResize Procedure }
 { ---------------------------------------------------------------------------- }
 
+Procedure TfrmMain.mnuOptionsActiveClick                       (         Sender: TObject               );
+Begin
+
+  ONLY_SHOW_ACTIVE := mnuOptionsActive.Checked;
+
+  { Reload the grid data }
+  RefreshGridData;
+
+End; { mnuOptionsActiveClick Procedure }
+{ ---------------------------------------------------------------------------- }
+
 Procedure TfrmMain.mnuEditCopyClick                            (         Sender: TObject               );
 Var
   SelectedRect : TGridRect;
@@ -306,6 +327,9 @@ Begin
   frmFlavorManagement.ShowModal;
   frmFlavorManagement.Free;
 
+  { Reload the grid data }
+  RefreshGridData;
+
 End; { mnuManagementFlavorsClick Procedure }
 { ---------------------------------------------------------------------------- }
 
@@ -315,6 +339,9 @@ Begin
   Application.CreateForm (TfrmPriceManagement, frmPriceManagement);
   frmPriceManagement.ShowModal;
   frmPriceManagement.Free;
+
+  { Reload the grid data }
+  RefreshGridData;
 
 End; { mnuManagementPricesClick Procedure }
 { ---------------------------------------------------------------------------- }
@@ -326,6 +353,9 @@ Begin
   frmSizeManagement.ShowModal;
   frmSizeManagement.Free;
 
+  { Reload the grid data }
+  RefreshGridData;
+
 End; { mnuManagementSizeClick Procedure }
 { ---------------------------------------------------------------------------- }
 
@@ -335,6 +365,9 @@ Begin
   Application.CreateForm (TfrmTypeManagement, frmTypeManagement);
   frmTypeManagement.ShowModal;
   frmTypeManagement.Free;
+
+  { Reload the grid data }
+  RefreshGridData;
 
 End; { mnuManagementTypesClick Procedure }
 { ---------------------------------------------------------------------------- }
@@ -349,6 +382,9 @@ Begin
     Then RefreshGridData;
 
   frmSaleItem.Free;
+
+  { Reload the grid data }
+  RefreshGridData;
 
 End; { pmuAddClick Procedure }
 { ---------------------------------------------------------------------------- }
@@ -384,7 +420,7 @@ Begin
 End; { pmuEditClick Procedure }
 { ---------------------------------------------------------------------------- }
 
-Procedure TfrmMain.pmuRemoveClick                              (         Sender: TObject               );
+Procedure TfrmMain.pmuDeactivateFlavorClick                    (         Sender: TObject               );
 Var
   RowIndex : Integer;
   FlavorID : Integer;
@@ -412,21 +448,30 @@ Begin
 
 
   { Ensure that the user wants to continue }
-  If ((FlavorID > 0) Or
+  If ((FlavorID > 0) And
       (SizeID > 0) Or
       (PriceID > 0)) And
 
-     (MessageDlg ('Question', 'Do you wish to remove this item (it cannot be undone)?', mtConfirmation, [mbYes, mbNo],0) = mrYes) Then Begin
+     (MessageDlg ('Question', 'Do you wish to deactivate this flavor?', mtConfirmation, [mbYes, mbNo],0) = mrYes) Then Begin
 
     { Use datamodule }
     With dmApp Do Begin
 
       Try
-        qryAmana.SQL.Text := '';
+
+        { Deactivate this item }
+        qryAmana.SQL.Text := 'Update popcornflavors Set ' +
+                                    'popcornflavors.Active = 0, ' +
+                                    'popcornflavors.Type_Ptr = 0 ' +
+                             'Where (popcornflavors.ID = ' + IntToStr (FlavorID) + ');';
 
         qryAmana.ExecSQL;
 
-        { Add audit trail record }
+        { Add a record to the audit trail }
+        AddAuditTrailRecord ('Insert Into popcornflavorsaudit (Flavor, Description, Type_Ptr, Active, ID_Ptr, ChangedOn) Values ('''','''',0,0,' + IntToStr (FlavorID) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
+
+        { Reload the grid data }
+        RefreshGridData;
 
       Except
         On E : Exception
@@ -437,7 +482,7 @@ Begin
 
   End; { If the user agrees to coninue }
 
-End; { pmuRemoveClick Procedure }
+End; { pmuDeactivateFlavorClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.FormClose                                   (         Sender: TObject;
@@ -451,6 +496,36 @@ Begin
   SaveGlobalSettings (frmMain);
 
 End; { FormClose Procedure }
+{ ---------------------------------------------------------------------------- }
+
+Procedure TfrmMain.pmuPopup                                    (         Sender: TObject               );
+Var
+  RowIndex : Integer;
+  SizeID   : Integer;
+  PriceID  : Integer;
+
+Begin
+
+  { Initialize the IDs }
+  SizeID   := 0;
+  PriceID  := 0;
+
+  { If the user selected an cell on the grid }
+  If (grdMain.Selection.Top > 0) Then Begin
+
+    { Get the FIRST selected row }
+    RowIndex := grdMain.Selection.Top;
+
+    SizeID   := StrToInt (grdMain.Cells [GridColSizeID, RowIndex]);
+    PriceID  := StrToInt (grdMain.Cells [GridColPriceID, RowIndex]);
+
+  End; { Get the selected row }
+
+  { Only allow the user to disable items that have already been disabled }
+  pmuDeactivateFlavor.Enabled := ((SizeID <> 0) Or
+                                  (PriceID <> 0));
+
+End; { pmuPopup Procedure }
 { ---------------------------------------------------------------------------- }
 
 
@@ -504,11 +579,18 @@ End; { ResetColumnHeader }
 Procedure TfrmMain.RefreshGridData;
 Var
   RowIndex    : Integer;
+  WhereSQL    : String;
 
 Begin
 
   { Clear off the grid and reset the row count }
   grdMain.Clear;
+
+  { Show all or show only active flavors }
+  If (ONLY_SHOW_ACTIVE)
+    Then WhereSQL := ' Where (popcornflavors.Active = 1) '
+    Else WhereSQL := '';
+
 
   With dmApp Do Begin
     qryAmana.SQL.Text := 'Select COUNT(popcornflavors.Flavor) As Number ' +
@@ -517,7 +599,8 @@ Begin
 
                          'Left Outer Join popcorntype On (popcorntype.ID = popcornflavors.Type_Ptr) ' +
                          'Left Outer Join popcorntypeprices On (popcorntypeprices.Type_Ptr = popcornflavors.Type_Ptr) ' +
-                         'Left Outer Join popcornsizes On (popcornsizes.ID = popcorntypeprices.Size_Ptr) ';
+                         'Left Outer Join popcornsizes On (popcornsizes.ID = popcorntypeprices.Size_Ptr) ' +
+                         WhereSQL;
     qryAmana.Open;
 
     { Set the number of rows on the grid, + the header row }
@@ -546,6 +629,9 @@ Begin
                          'Left Outer Join popcorntype On (popcorntype.ID = popcornflavors.Type_Ptr) ' +
                          'Left Outer Join popcorntypeprices On (popcorntypeprices.Type_Ptr = popcornflavors.Type_Ptr) ' +
                          'Left Outer Join popcornsizes On (popcornsizes.ID = popcorntypeprices.Size_Ptr) ' +
+
+                         WhereSQL +
+
                          'Order By popcorntype.Type, popcornflavors.Flavor, popcornsizes.ID ';
 
     qryAmana.Open;

@@ -22,6 +22,7 @@ Type
   TfrmFlavorManagement = Class (TForm)
     btnTypeManagement   : TButton;
     cbxType             : TComboBox;
+    ckbxActive          : TCheckBox;
     gbDetails           : TGroupBox;
     btnCancel           : TButton;
     btnSave             : TButton;
@@ -133,7 +134,7 @@ Begin
     { If the user selected an valid item }
     If (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex]) <> -1) Then Begin
 
-      qryAmana.SQL.Text := 'Select ID, Flavor, Description, Type_Ptr ' +
+      qryAmana.SQL.Text := 'Select ID, Flavor, Description, Type_Ptr, Active ' +
                            'From popcornflavors ' +
                            'Where (ID = ' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ');';
 
@@ -144,7 +145,7 @@ Begin
 
         edtFlavor.Text      := qryAmana.FieldByName ('Flavor').AsString;
         mmoDescription.Text := qryAmana.FieldByName ('Description').AsString;
-
+        ckbxActive.Checked  := (qryAmana.FieldByName ('Active').AsInteger <> 0);
 
         { If the Type Pointer points to a valid type still, then find it and select that item from the list }
         cbxTypeIndex := cbxType.Items.IndexOfObject (TObject (qryAmana.FieldByName ('Type_Ptr').AsInteger));
@@ -267,13 +268,18 @@ Begin
 
   With dmApp Do Begin
 
+    { Ensure that the user is saving a valid type }
+    If (ckbxActive.Checked) And
+       (cbxType.ItemIndex <= 0) Then Begin
+      ShowMessage ('In order to save an active flavor, you must select a type from the combo box below...');
+      Exit;
+    End;
+
+
     { If the list does not have an item highlighted, insert a new record }
     If (lstbxItems.ItemIndex = -1) Then Begin
 
-      qryAmana.SQL.Text := 'Insert Into popcornflavors (Flavor, Description, Type_Ptr) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ');';
-
-      { Add a record to the audit trail }
-      AddAuditTrailRecord (qryAmana.SQL.Text);
+      qryAmana.SQL.Text := 'Insert Into popcornflavors (Flavor, Description, Type_Ptr, Active) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (Integer (ckbxActive.Checked)) + ');';
 
       { Insert, then open the SQL query }
       qryAmana.ExecSQL;
@@ -283,7 +289,7 @@ Begin
       qryAmana.Close;
 
       { Add a record to the audit trail }
-      AddAuditTrailRecord ('Insert Into popcornflavorsaudit (Flavor, Description, Type_Ptr, ID_Ptr, ChangedOn) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (NewItemID) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
+      AddAuditTrailRecord ('Insert Into popcornflavorsaudit (Flavor, Description, Type_Ptr, Active, ID_Ptr, ChangedOn) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (Integer (ckbxActive.Checked)) + ',' + IntToStr (NewItemID) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
 
       { Add the item to the list }
       lstbxItems.Items.AddObject (CleanQueryVarStr (edtFlavor.Text), TObject (NewItemID));
@@ -296,12 +302,13 @@ Begin
       qryAmana.SQL.Text := 'Update popcornflavors Set ' +
                                    'Flavor = '''      + CleanQueryVarStr (edtFlavor.Text)                              + ''',' +
                                    'Description = ''' + CleanQueryVarStr (mmoDescription.Text)                         + ''',' +
-                                   'Type_Ptr = '      + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ' ' +
+                                   'Type_Ptr = '      + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ', ' +
+                                   'Active = '        +  IntToStr (Integer (ckbxActive.Checked)) + ' ' +
 
                            'Where (ID = ' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ');';
 
       { Add a record to the audit trail }
-      AddAuditTrailRecord ('Insert Into popcornflavorsaudit (Flavor, Description, Type_Ptr, ID_Ptr, ChangedOn) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
+      AddAuditTrailRecord ('Insert Into popcornflavorsaudit (Flavor, Description, Type_Ptr, Active, ID_Ptr, ChangedOn) Values (''' + CleanQueryVarStr (edtFlavor.Text) + ''',''' + CleanQueryVarStr (mmoDescription.Text) + ''',' + IntToStr (Integer (cbxType.Items.Objects [cbxType.ItemIndex])) + ',' +  IntToStr (Integer (ckbxActive.Checked))  + ',' + IntToStr (Integer (lstbxItems.Items.Objects [lstbxItems.ItemIndex])) + ',''' + FormatDateTime ('YYYY-MM-DD hh:nn:ss', Now) + ''');');
 
       { Execute the SQL query }
       qryAmana.ExecSQL;
