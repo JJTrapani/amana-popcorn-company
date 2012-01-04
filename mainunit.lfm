@@ -64,6 +64,14 @@ object frmMain: TfrmMain
         OnClick = mnuFileExportClick
       end
     end
+    object mnuView: TMenuItem
+      Caption = '&View'
+      object mnuViewHide: TMenuItem
+        Caption = '&Hide/UnHide Columns'
+        ShortCut = 16470
+        OnClick = mnuViewHideClick
+      end
+    end
     object mnuManagement: TMenuItem
       Caption = '&Management'
       object mnuManagementSize: TMenuItem
