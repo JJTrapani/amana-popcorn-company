@@ -58,6 +58,11 @@ object frmMain: TfrmMain
         ShortCut = 16451
         OnClick = mnuEditCopyClick
       end
+      object mnuEditExport: TMenuItem
+        Caption = 'E&xport To A File'
+        ShortCut = 16453
+        OnClick = mnuFileExportClick
+      end
     end
     object mnuManagement: TMenuItem
       Caption = '&Management'
@@ -108,7 +113,6 @@ object frmMain: TfrmMain
     end
     object pmuEdit: TMenuItem
       Caption = '&Edit'
-      ShortCut = 16453
       OnClick = pmuEditClick
     end
     object pmuDeactivateFlavor: TMenuItem
@@ -116,5 +120,9 @@ object frmMain: TfrmMain
       ShortCut = 16466
       OnClick = pmuDeactivateFlavorClick
     end
+  end
+  object dlgSave: TSaveDialog
+    left = 80
+    top = 8
   end
 end

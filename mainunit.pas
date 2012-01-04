@@ -20,8 +20,8 @@ Uses
 Type
 
   { TfrmMain }
-
   TfrmMain = Class (TForm)
+    mnuEditExport                       : TMenuItem;
     mnuFileRefresh                      : TMenuItem;
     pmuRefresh                          : TMenuItem;
     mnuOptionsActive                    : TMenuItem;
@@ -41,6 +41,7 @@ Type
     mnu                                 : TMainMenu;
     grdMain                             : TStringGrid;
     pmu                                 : TPopupMenu;
+    dlgSave                             : TSaveDialog;
     sBar                                : TStatusBar;
 
 
@@ -56,6 +57,7 @@ Type
                                                            X: Integer;
                                                            Y: Integer           );
     Procedure grdMainResize             (             Sender: TObject           );
+    Procedure mnuFileExportClick        (             Sender: TObject           );
     Procedure mnuFileRefreshClick       (             Sender: TObject           );
     Procedure mnuOptionsActiveClick     (             Sender: TObject           );
     Procedure mnuEditCopyClick          (             Sender: TObject           );
@@ -129,7 +131,9 @@ Begin
   GridShown := False;
 
   { Set the global variables }
-  APPLICATION_PATH := ExtractFilePath (Application.EXEName);
+  APPLICATION_PATH         := ExtractFilePath (Application.EXEName);
+  SAVE_DIALOG_LOC          := APPLICATION_PATH;
+  SAVE_DIALOG_FILTER_INDEX := 1;
 
   { Initially, only show the active flavors }
   ONLY_SHOW_ACTIVE := True;
@@ -239,6 +243,7 @@ Procedure TfrmMain.grdMainResize                               (         Sender:
 Var
   TotalColumnWidths : Integer;
   Index             : Integer;
+  LastColumnShown   : Integer;
 
 Begin
 
@@ -252,20 +257,146 @@ Begin
       Do TotalColumnWidths := TotalColumnWidths + grdMain.Columns [Index].Width;
 
 
+    { Grab the last SHOWN column's Index }
+    LastColumnShown := -1;
+    Index := (grdMain.ColCount - 4);
+    While (Index >= 0) And
+          (LastColumnShown = -1) Do Begin
 
-    For Index := 0 To grdMain.ColCount - 4 Do Begin
+      If (grdMain.Columns [Index].Width > 0)
+        Then LastColumnShown := Index
+        Else Index := Index - 1;
+    End; { While }
 
-      { Use it as a percentage, and round down }
-      grdMain.Columns [Index].Width := Trunc ((grdMain.Columns [Index].Width / TotalColumnWidths) * frmMain.Width);
 
-      { Do not allow the column to get smaller than 30 pixels }
-      If (grdMain.Columns [Index].Width < 30)
-        Then grdMain.Columns [Index].Width := 30;
+    { If we found a shown index, add the rest of the grid width to it's width }
+    If (Index > -1) Then Begin
 
-    End; { For }
+      { Only adjust if we have extra space }
+      If (grdMain.Width - TotalColumnWidths > 0) Then Begin
+
+        { Resize the last shown column to make up for the rest of the new space }
+        grdMain.Columns [Index].Width := grdMain.Columns [Index].Width + (grdMain.Width - TotalColumnWidths);
+
+        { Do not allow the column to get smaller than 30 pixels }
+        If (grdMain.Columns [Index].Width < 30)
+          Then grdMain.Columns [Index].Width := 30;
+
+      End; { If we expanded the grid's width }
+
+    End; { If we found an index that is shown }
+
   End; { If grid is shown }
 
 End; { grdMainResize Procedure }
+{ ---------------------------------------------------------------------------- }
+
+Procedure TfrmMain.mnuFileExportClick                          (         Sender: TObject               );
+Var
+  SaveAsTXT : Boolean;
+  RowIndex  : Integer;
+  ColIndex  : Integer;
+  Line      : String;
+  NewFile   : TStringList;
+
+Begin
+
+  { Setup the save dialog options }
+  dlgSave.Title       := 'Save your text or comma seperated value file';
+  dlgSave.InitialDir  := SAVE_DIALOG_LOC;
+  dlgSave.Filter      := 'Text File|*.txt|CSV File|*.csv';
+  dlgSave.FilterIndex := SAVE_DIALOG_FILTER_INDEX;
+
+  { Display the open file dialog }
+  If (dlgSave.Execute) Then Begin
+
+    { Get the path of the file and create the new file via a TStringList }
+    SAVE_DIALOG_LOC := ExtractFilePath (dlgSave.FileName);
+    SAVE_DIALOG_FILTER_INDEX := dlgSave.FilterIndex;
+    NewFile         := TStringList.Create;
+    NewFile.Clear;
+
+    { Determine if we are saving a txt or csv file }
+    SaveAsTXT := (Pos ('TXT', UpperCase (ExtractFileExt (dlgSave.FileName))) > 0);
+
+    Line := '';
+
+    { Loop through all of the columns and gather the header titles }
+    For ColIndex := 0 To GridColCount - 4 Do Begin
+      If (SaveAsTXT) Then Begin
+        { Add the header row }
+        If (Line = '')
+          Then Line := grdMain.Columns [ColIndex].Title.Caption
+          Else Line := Line + #9 + grdMain.Columns [ColIndex].Title.Caption;
+      End { TXT }
+
+      { CSV }
+      Else Begin
+
+        { Add the header row }
+        If (Line = '')
+          Then Line := grdMain.Columns [ColIndex].Title.Caption
+          Else Line := Line + ',' + grdMain.Columns [ColIndex].Title.Caption;
+      End; { CSV }
+    End; { For all of our header captions }
+
+    { Add the header line }
+    NewFile.Add (Line);
+
+
+
+
+    { Loop through the and save it's gdata }
+    For RowIndex := 1 To grdMain.RowCount - 1 Do Begin
+      Line := '';
+
+      For ColIndex := 0 To GridColCount - 4 Do Begin
+
+        Application.ProcessMessages;
+
+        { TXT }
+        If (SaveAsTXT) Then Begin
+
+          { Add row data }
+          If (Line = '')
+            Then Line := grdMain.Cells [ColIndex, RowIndex]
+            Else Line := Line + #9 + grdMain.Cells [ColIndex, RowIndex];
+        End { TXT }
+
+
+        { CSV }
+        Else Begin
+
+          { Add row data }
+          If (Line = '')
+            Then Line := grdMain.Cells [ColIndex, RowIndex]
+            Else Line := Line + ',' + grdMain.Cells [ColIndex, RowIndex];
+        End; { Else CSV }
+
+      End; { For each column }
+
+      NewFile.Add (Line);
+
+    End; { For each row }
+
+
+
+
+    Try
+
+      { Save the file and alert the user }
+      NewFile.SaveToFile (dlgSave.FileName);
+      ShowMessage ('The file ' + ExtractFileName (dlgSave.FileName) + ' has been saved at:' + #10#13 +
+                   ExtractFileDir (dlgSave.FileName) + '.');
+
+    Except
+      On E : Exception
+          Do ShowMessage ('The file could not be saved.  ' + E.Message);
+    End; { Try }
+
+  End; { If the user clicked OK when prompted to save the file }
+
+End; { mnuFileExportClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.mnuFileRefreshClick                         (         Sender: TObject               );
