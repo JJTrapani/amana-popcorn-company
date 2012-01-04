@@ -353,7 +353,7 @@ Begin
 
 
 
-    { Loop through the and save it's gdata }
+    { Loop through the and save it's data }
     For RowIndex := 1 To grdMain.RowCount - 1 Do Begin
       Line := '';
 
@@ -822,7 +822,7 @@ Begin
 
   { Hide these columns from plainsight }
   For Index := 0 To HIDDEN_GRDMAIN_COLUMNS.Count - 1
-    Do grdMain.Columns [Index].Width := 0;
+    Do grdMain.Columns [StrToInt (HIDDEN_GRDMAIN_COLUMNS.Strings [Index])].Width := 0;
 
   { Set up the default column text }
   grdMain.Columns [GridColFlavor   ].Title.Caption := 'Flavor';
@@ -838,7 +838,7 @@ Begin
   grdMain.Columns [GridColSizeID   ].Title.Caption := 'SizeID';
   grdMain.Columns [GridColPriceID  ].Title.Caption := 'PriceID';
 
-End; { ResetColumnHeader }
+End; { ResetColumnHeader Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.RefreshGridData;
