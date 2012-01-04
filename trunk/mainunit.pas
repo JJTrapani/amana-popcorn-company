@@ -14,13 +14,18 @@ Uses
   Dialogs,
   Menus,
   Grids,
-  ComCtrls;
+  ComCtrls,
+  CheckLst,
+  StdCtrls,
+  ExtCtrls;
 
 
 Type
 
   { TfrmMain }
   TfrmMain = Class (TForm)
+    mnuViewHide                         : TMenuItem;
+    mnuView                             : TMenuItem;
     mnuEditExport                       : TMenuItem;
     mnuFileRefresh                      : TMenuItem;
     pmuRefresh                          : TMenuItem;
@@ -66,6 +71,7 @@ Type
     Procedure mnuManagementPricesClick  (             Sender: TObject           );
     Procedure mnuManagementSizeClick    (             Sender: TObject           );
     Procedure mnuManagementTypesClick   (             Sender: TObject           );
+    Procedure mnuViewHideClick          (             Sender: TObject           );
     Procedure pmuAddClick               (             Sender: TObject           );
     Procedure pmuEditClick              (             Sender: TObject           );
     Procedure pmuDeactivateFlavorClick  (             Sender: TObject           );
@@ -134,6 +140,7 @@ Begin
   APPLICATION_PATH         := ExtractFilePath (Application.EXEName);
   SAVE_DIALOG_LOC          := APPLICATION_PATH;
   SAVE_DIALOG_FILTER_INDEX := 1;
+  HIDDEN_GRDMAIN_COLUMNS   := TStringList.Create;
 
   { Initially, only show the active flavors }
   ONLY_SHOW_ACTIVE := True;
@@ -518,6 +525,100 @@ Begin
 End; { mnuManagementTypesClick Procedure }
 { ---------------------------------------------------------------------------- }
 
+Procedure TfrmMain.mnuViewHideClick                            (         Sender: TObject               );
+Var
+  frmSelect : TForm;
+  pnlBot    : TPanel;
+  btnOK     : TButton;
+  btnCancel : TButton;
+  ChkList   : TCheckListBox;
+  Index     : Integer;
+  HideIndex : Integer;
+
+Begin
+
+  { Set up the form }
+  frmSelect         := TForm.Create (Nil);
+  frmSelect.Caption := 'Uncheck the columns you wish to hide';
+  frmSelect.Top     := frmMain.Top;
+  frmSelect.Left    := frmMain.Left;
+  frmSelect.Height  := 250;
+  frmSelect.Width   := 200;
+
+  { Create a check box list on the form }
+  ChkList            := TCheckListBox.Create (frmSelect);
+  ChkList.Parent     := frmSelect;
+  ChkList.Clear;
+  ChkList.Top        := 1;
+  ChkList.Left       := 1;
+  ChkList.Align      := alClient;
+  ChkList.Anchors    := [akTop,akLeft,akRight,akBottom];
+  ChkList.ItemHeight := 0;
+  ChkList.TabOrder   := 0;
+
+  { Create two buttons on the bottom of the form }
+  pnlBot         := TPanel.Create (frmSelect);
+  pnlBot.Parent  := frmSelect;
+  pnlBot.Caption := '';
+  pnlBot.Height  := 30;
+  pnlBot.Align   := alBottom;
+
+  { Add an OK button (confirmation) }
+  btnOK             := TButton.Create (pnlBot);
+  btnOK.Parent      := pnlBot;
+  btnOK.Caption     := 'OK';
+  btnOK.ModalResult := mrOk;
+  btnOK.Align       := alRight;
+
+  { Add a cancel button }
+  btnCancel             := TButton.Create (pnlBot);
+  btnCancel.Parent      := pnlBot;
+  btnCancel.Caption     := 'Cancel';
+  btnCancel.ModalResult := mrCancel;
+  btnCancel.Align       := alLeft;
+
+
+
+  { Display all of the columns on the list for the user to select from }
+  For Index := 0 To GridColCount - 4 Do Begin
+    ChkList.Items.Add (grdMain.Columns [Index].Title.Caption);
+
+    { If the column number is NOT found on the global list of hidden columns, check it }
+    ChkList.Checked [Index] := (HIDDEN_GRDMAIN_COLUMNS.IndexOf (IntToStr (Index)) = -1);
+
+  End; { For each column }
+
+
+
+  { Display the form }
+  If (frmSelect.ShowModal = mrOK) Then Begin
+
+    { Clear off the old list }
+    HIDDEN_GRDMAIN_COLUMNS.Clear;
+
+    { Loop back through all of the columns to see which are now "hidden" }
+    For Index := 0 To ChkList.Count - 1 Do Begin
+
+      { If it wasn't checked, HIDE it }
+      If (Not ChkList.Checked [Index]) Then Begin
+        HIDDEN_GRDMAIN_COLUMNS.Add (IntToStr (Index));
+        grdMain.Columns [Index].Width := 0;
+      End
+
+      { If the column was not marked as hidden, yet it's width is 0, reset it to 30 }
+      Else If (grdMain.Columns [Index].Width < 30)
+        Then grdMain.Columns [Index].Width := 30;
+
+    End; { For each item on the checklist }
+
+  End; { frmSelect ShowModal }
+
+  { Free the form }
+  frmSelect.Free;
+
+End; { mnuViewHideClick Procedure }
+{ ---------------------------------------------------------------------------- }
+
 Procedure TfrmMain.pmuAddClick                                 (         Sender: TObject               );
 Begin
 
@@ -641,6 +742,9 @@ Begin
   { Save our global settings }
   SaveGlobalSettings (frmMain);
 
+  { Free our global lists }
+  HIDDEN_GRDMAIN_COLUMNS.Free;
+
 End; { FormClose Procedure }
 { ---------------------------------------------------------------------------- }
 
@@ -694,6 +798,9 @@ End; { pmuRefreshClick Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.ResetColumnHeader                           (         NumberOfRows: Integer = 1       );
+Var
+  Index : Integer;
+
 Begin
 
   { Add a new row }
@@ -713,6 +820,9 @@ Begin
   grdMain.Columns [GridColSizeID   ].Width := 0;
   grdMain.Columns [GridColPriceID  ].Width := 0;
 
+  { Hide these columns from plainsight }
+  For Index := 0 To HIDDEN_GRDMAIN_COLUMNS.Count - 1
+    Do grdMain.Columns [Index].Width := 0;
 
   { Set up the default column text }
   grdMain.Columns [GridColFlavor   ].Title.Caption := 'Flavor';

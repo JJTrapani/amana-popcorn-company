@@ -25,6 +25,7 @@ Var
   SAVE_DIALOG_LOC                         : String;
   ONLY_SHOW_ACTIVE                        : Boolean;
   SAVE_DIALOG_FILTER_INDEX                : Integer;
+  HIDDEN_GRDMAIN_COLUMNS                  : TStringList;
 
 Implementation
 
@@ -172,7 +173,11 @@ Begin
       End
 
       Else If (Param = 'SVE_DLG_FLTR_INDX')
-        Then SAVE_DIALOG_FILTER_INDEX := StrToInt (GetSettingValue (TheLine, '='));
+        Then SAVE_DIALOG_FILTER_INDEX := StrToInt (GetSettingValue (TheLine, '='))
+
+      Else If (Param = 'HIDDEN_GRDMAIN_COLUMNS')
+        Then HIDDEN_GRDMAIN_COLUMNS.Add (GetSettingValue (TheLine, '='));
+
 
     Except
       { Do nothing on exceptions.  Just continue }
@@ -229,6 +234,10 @@ Begin
   Settings.Add ('ONLY_SHOW_ACTIVE=' + IntToStr (Integer (ONLY_SHOW_ACTIVE)));
   Settings.Add ('SAVE_DIALOG_LOC='  + SAVE_DIALOG_LOC);
   Settings.Add ('SVE_DLG_FLTR_INDX='+ IntToStr (SAVE_DIALOG_FILTER_INDEX));
+
+  { Track all of the hidden columns }
+  For Index := 0 To HIDDEN_GRDMAIN_COLUMNS.Count - 1
+    Do Settings.Add ('HIDDEN_GRDMAIN_COLUMNS=' + HIDDEN_GRDMAIN_COLUMNS.Strings [Index]);
 
   {
 
