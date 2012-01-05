@@ -23,9 +23,18 @@ Procedure SaveGlobalSettings             (          MainForm: TForm           );
 Var
   APPLICATION_PATH                        : String;
   SAVE_DIALOG_LOC                         : String;
+
   ONLY_SHOW_ACTIVE                        : Boolean;
+
   SAVE_DIALOG_FILTER_INDEX                : Integer;
+  FORM_HIDE_LEFT                          : Integer;
+  FORM_HIDE_TOP                           : Integer;
+  FORM_HIDE_HEIGHT                        : Integer;
+  FORM_HIDE_WIDTH                         : Integer;
+
+  GRDMAIN_COLUMNS_WIDTHS                  : TStringList;
   HIDDEN_GRDMAIN_COLUMNS                  : TStringList;
+
 
 Implementation
 
@@ -101,8 +110,9 @@ Procedure LoadGlobalSettings                                   (         MainFor
 
 Var
   Settings          : TStringList;
-  FileName          : String;
   Index             : Integer;
+  GrdMainIndex      : Integer;
+  FileName          : String;
   TheLine           : String;
   Param             : String;
 
@@ -130,6 +140,8 @@ Begin
     Exit;
   End;
 
+  { Start at column 0 }
+  GrdMainIndex := 0;
 
   { Loop through all lines in settings file }
   For Index := 0 To Settings.Count - 1 Do Begin
@@ -175,9 +187,25 @@ Begin
       Else If (Param = 'SVE_DLG_FLTR_INDX')
         Then SAVE_DIALOG_FILTER_INDEX := StrToInt (GetSettingValue (TheLine, '='))
 
+      Else If (Param = 'GRDMAIN_COLUMNS_WIDTHS') Then Begin
+        GRDMAIN_COLUMNS_WIDTHS.Strings [GrdMainIndex] := GetSettingValue (TheLine, '=');
+        Inc (GrdMainIndex);
+      End
+
       Else If (Param = 'HIDDEN_GRDMAIN_COLUMNS')
         Then HIDDEN_GRDMAIN_COLUMNS.Add (GetSettingValue (TheLine, '='));
 
+      If (Param = 'FORM_HIDE_LEFT')
+        Then FORM_HIDE_LEFT:= StrToInt (GetSettingValue (TheLine, '='))
+
+      Else If (Param = 'FORM_HIDE_TOP')
+        Then FORM_HIDE_TOP := StrToInt (GetSettingValue (TheLine, '='))
+
+      Else If (Param = 'FORM_HIDE_WIDTH')
+        Then FORM_HIDE_WIDTH := StrToInt (GetSettingValue (TheLine, '='))
+
+      Else If (Param = 'FORM_HIDE_HEIGHT')
+        Then FORM_HIDE_HEIGHT := StrToInt (GetSettingValue (TheLine, '='))
 
     Except
       { Do nothing on exceptions.  Just continue }
@@ -235,16 +263,21 @@ Begin
   Settings.Add ('SAVE_DIALOG_LOC='  + SAVE_DIALOG_LOC);
   Settings.Add ('SVE_DLG_FLTR_INDX='+ IntToStr (SAVE_DIALOG_FILTER_INDEX));
 
+  { Set up the column widths }
+  For Index := 0 To GRDMAIN_COLUMNS_WIDTHS.Count - 1
+    Do Settings.Add ('GRDMAIN_COLUMNS_WIDTHS=' + GRDMAIN_COLUMNS_WIDTHS.Strings [Index]);
+
   { Track all of the hidden columns }
   For Index := 0 To HIDDEN_GRDMAIN_COLUMNS.Count - 1
     Do Settings.Add ('HIDDEN_GRDMAIN_COLUMNS=' + HIDDEN_GRDMAIN_COLUMNS.Strings [Index]);
 
-  {
+  Settings.Add ('FORM_HIDE_LEFT='  + IntToStr (FORM_HIDE_LEFT));
+  Settings.Add ('FORM_HIDE_TOP='   + IntToStr (FORM_HIDE_TOP));
+  Settings.Add ('FORM_HIDE_HEIGHT='+ IntToStr (FORM_HIDE_HEIGHT));
+  Settings.Add ('FORM_HIDE_WIDTH=' + IntToStr (FORM_HIDE_WIDTH));
 
-  For Index := 0 To clbxSearches.Count - 1
-    Do If clbxSearches.Checked [Index] = True
-         Then Settings.Add ('clbxSearches=' + IntToStr (Index));
-  }
+
+
 
 
   Try

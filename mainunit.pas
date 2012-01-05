@@ -56,11 +56,18 @@ Type
     Procedure grdMainHeaderClick        (             Sender: TObject;
                                                     IsColumn: Boolean;
                                                        Index: Integer           );
+    Procedure grdMainHeaderSized        (             Sender: TObject;
+                                                    IsColumn: Boolean;
+                                                       Index: Integer           );
     Procedure FocusCellLikeLeftClick    (             Sender: TObject;
                                                       Button: TMouseButton;
                                                        Shift: TShiftState;
                                                            X: Integer;
                                                            Y: Integer           );
+    Procedure grdMainHeaderSizing       (             Sender: TObject;
+                                              Const IsColumn: Boolean;
+                                                Const aIndex: Integer;
+                                                 Const aSize: Integer);
     Procedure grdMainResize             (             Sender: TObject           );
     Procedure mnuFileExportClick        (             Sender: TObject           );
     Procedure mnuFileRefreshClick       (             Sender: TObject           );
@@ -141,6 +148,24 @@ Begin
   SAVE_DIALOG_LOC          := APPLICATION_PATH;
   SAVE_DIALOG_FILTER_INDEX := 1;
   HIDDEN_GRDMAIN_COLUMNS   := TStringList.Create;
+  GRDMAIN_COLUMNS_WIDTHS   := TStringList.Create;
+
+  { Set the default list of grid column widths }
+  GRDMAIN_COLUMNS_WIDTHS.Add ('100');
+  GRDMAIN_COLUMNS_WIDTHS.Add ('300');
+  GRDMAIN_COLUMNS_WIDTHS.Add ('100');
+  GRDMAIN_COLUMNS_WIDTHS.Add ('80');
+  GRDMAIN_COLUMNS_WIDTHS.Add ('40');
+  GRDMAIN_COLUMNS_WIDTHS.Add ('40');
+  GRDMAIN_COLUMNS_WIDTHS.Add ('40');
+  GRDMAIN_COLUMNS_WIDTHS.Add ('40');
+  GRDMAIN_COLUMNS_WIDTHS.Add ('50');
+
+  { Default the hide/unhide form's positioning }
+  FORM_HIDE_TOP            := frmMain.Top;
+  FORM_HIDE_LEFT           := frmMain.Left;
+  FORM_HIDE_HEIGHT         := 300;
+  FORM_HIDE_WIDTH          := 250;
 
   { Initially, only show the active flavors }
   ONLY_SHOW_ACTIVE := True;
@@ -151,7 +176,7 @@ Begin
   { After loading in the settings, check/uncheck the active switch }
   mnuOptionsActive.Checked := ONLY_SHOW_ACTIVE;
 
-  { Create the datamodule to use throughout the application }
+  { Create the datamodule to use\ throughout the application }
   Application.CreateForm (TdmApp, dmApp);
 
   { Set up some min. constraints for our main window }
@@ -188,6 +213,9 @@ Begin
   { Enable resizing of the grid }
   GridShown := True;
 
+  { Resize the grid columns }
+  grdMainResize (Nil);
+
 End; { FormShow Procedure }
 { ---------------------------------------------------------------------------- }
 
@@ -209,6 +237,19 @@ Begin
   End; { If the user clicked on a column }
 
 End; { grdMainHeaderClick Procedure }
+{ ---------------------------------------------------------------------------- }
+
+Procedure TfrmMain.grdMainHeaderSized                          (         Sender: TObject;
+                                                                       IsColumn: Boolean;
+                                                                          Index: Integer               );
+Begin
+
+  { Ensure these columns do not become visible to the user }
+  grdMain.Columns [GridColFlavorID].Width := 0;
+  grdMain.Columns [GridColSizeID  ].Width := 0;
+  grdMain.Columns [GridColPriceID ].Width := 1;
+
+End; { grdMainHeaderSized Procedure }
 { ---------------------------------------------------------------------------- }
 
 Procedure TfrmMain.FocusCellLikeLeftClick                      (         Sender: TObject;
@@ -246,6 +287,20 @@ Begin
 End; { FocusCellLikeLeftClick Procedure }
 { ---------------------------------------------------------------------------- }
 
+Procedure TfrmMain.grdMainHeaderSizing                         (         Sender: TObject;
+                                                                 Const IsColumn: Boolean;
+                                                                   Const aIndex: Integer;
+                                                                    Const aSize: Integer);
+Begin
+
+  { Ensure these columns do not become visible to the user }
+  grdMain.Columns [GridColFlavorID].Width := 0;
+  grdMain.Columns [GridColSizeID  ].Width := 0;
+  grdMain.Columns [GridColPriceID ].Width := 1;
+
+End; { grdMainHeaderSizing Procedure }
+{ ---------------------------------------------------------------------------- }
+
 Procedure TfrmMain.grdMainResize                               (         Sender: TObject               );
 Var
   TotalColumnWidths : Integer;
@@ -263,14 +318,15 @@ Begin
     For Index := 0 To grdMain.ColCount - 4
       Do TotalColumnWidths := TotalColumnWidths + grdMain.Columns [Index].Width;
 
-
     { Grab the last SHOWN column's Index }
     LastColumnShown := -1;
     Index := (grdMain.ColCount - 4);
+
+
     While (Index >= 0) And
           (LastColumnShown = -1) Do Begin
 
-      If (grdMain.Columns [Index].Width > 0)
+      If (grdMain.Columns [Index].Width > 2)
         Then LastColumnShown := Index
         Else Index := Index - 1;
     End; { While }
@@ -279,17 +335,21 @@ Begin
     { If we found a shown index, add the rest of the grid width to it's width }
     If (Index > -1) Then Begin
 
-      { Only adjust if we have extra space }
-      If (grdMain.Width - TotalColumnWidths > 0) Then Begin
+      { Resize the last shown column to make up for the rest of the new space }
+      grdMain.Columns [Index].Width := grdMain.Columns [Index].Width + (grdMain.Width - TotalColumnWidths) - 25;
 
-        { Resize the last shown column to make up for the rest of the new space }
-        grdMain.Columns [Index].Width := grdMain.Columns [Index].Width + (grdMain.Width - TotalColumnWidths);
+      { Do not allow the column to get smaller than 30 pixels }
+      If (grdMain.Columns [Index].Width < 30)
+        Then grdMain.Columns [Index].Width := 30;
 
-        { Do not allow the column to get smaller than 30 pixels }
-        If (grdMain.Columns [Index].Width < 30)
-          Then grdMain.Columns [Index].Width := 30;
 
-      End; { If we expanded the grid's width }
+      { This is to prevent an error with the TControl component }
+      { When the user has only one column shown, notice that when the user has excess }
+      { grid to scroll over on the right, upon clicking the arrow box on the }
+      { scroll bar, an List Out Of Bounds (12) error occurs }
+      grdMain.Columns [GridColFlavorID].Width := 0;
+      grdMain.Columns [GridColSizeID  ].Width := 0;
+      grdMain.Columns [GridColPriceID ].Width := 1;
 
     End; { If we found an index that is shown }
 
@@ -540,10 +600,10 @@ Begin
   { Set up the form }
   frmSelect         := TForm.Create (Nil);
   frmSelect.Caption := 'Uncheck the columns you wish to hide';
-  frmSelect.Top     := frmMain.Top;
-  frmSelect.Left    := frmMain.Left;
-  frmSelect.Height  := 250;
-  frmSelect.Width   := 200;
+  frmSelect.Top     := FORM_HIDE_TOP;
+  frmSelect.Left    := FORM_HIDE_LEFT;
+  frmSelect.Height  := FORM_HIDE_HEIGHT;
+  frmSelect.Width   := FORM_HIDE_WIDTH;
 
   { Create a check box list on the form }
   ChkList            := TCheckListBox.Create (frmSelect);
@@ -605,13 +665,22 @@ Begin
         grdMain.Columns [Index].Width := 0;
       End
 
-      { If the column was not marked as hidden, yet it's width is 0, reset it to 30 }
+      { If the column was not marked as hidden, yet it's width is 0,  it to 30 }
       Else If (grdMain.Columns [Index].Width < 30)
         Then grdMain.Columns [Index].Width := 30;
 
+      { Remember the form's positioning }
+      FORM_HIDE_TOP    := frmSelect.Top;
+      FORM_HIDE_LEFT   := frmSelect.Left;
+      FORM_HIDE_HEIGHT := frmSelect.Height;
+      FORM_HIDE_WIDTH  := frmSelect.Width;
+
     End; { For each item on the checklist }
 
-  End; { frmSelect ShowModal }
+    { Resize the grid columns }
+    grdMainResize (Nil);
+
+  End; { frmSelect ShowModal = mrOK }
 
   { Free the form }
   frmSelect.Free;
@@ -734,7 +803,16 @@ End; { pmuDeactivateFlavorClick Procedure }
 
 Procedure TfrmMain.FormClose                                   (         Sender: TObject;
                                                                 Var CloseAction: TCloseAction          );
+Var
+  Index : Integer;
+
 Begin
+
+  { Save our grid widths }
+  For Index := 0 To grdMain.ColCount - 4 Do Begin
+    If (grdMain.Columns [Index].Width > 0)
+      Then GRDMAIN_COLUMNS_WIDTHS.Strings [Index] := IntToStr (grdMain.Columns [Index].Width);
+  End; { For }
 
   { Free the data module }
   dmApp.Free;
@@ -743,6 +821,7 @@ Begin
   SaveGlobalSettings (frmMain);
 
   { Free our global lists }
+  GRDMAIN_COLUMNS_WIDTHS.Free;
   HIDDEN_GRDMAIN_COLUMNS.Free;
 
 End; { FormClose Procedure }
@@ -807,24 +886,19 @@ Begin
   grdMain.RowCount := NumberOfRows;
 
   { Set up the default column widths }
-  grdMain.Columns [GridColFlavor   ].Width := 100;
-  grdMain.Columns [GridColDesc     ].Width := 300;
-  grdMain.Columns [GridColType     ].Width := 100;
-  grdMain.Columns [GridColPrice    ].Width := 80;
-  grdMain.Columns [GridColSize     ].Width := 40;
-  grdMain.Columns [GridColHeight   ].Width := 40;
-  grdMain.Columns [GridColDepth    ].Width := 40;
-  grdMain.Columns [GridColWidth    ].Width := 40;
-  grdMain.Columns [GridColCups     ].Width := 50;
-  grdMain.Columns [GridColFlavorID ].Width := 0;
-  grdMain.Columns [GridColSizeID   ].Width := 0;
-  grdMain.Columns [GridColPriceID  ].Width := 0;
+  For Index := 0 To GRDMAIN_COLUMNS_WIDTHS.Count - 1
+    Do grdMain.Columns [Index].Width := StrToInt (GRDMAIN_COLUMNS_WIDTHS.Strings [Index]);
+
+  { HIDE the last three ID columns }
+  grdMain.Columns [GridColFlavorID].Width := 0;
+  grdMain.Columns [GridColSizeID  ].Width := 0;
+  grdMain.Columns [GridColPriceID ].Width := 1;
 
   { Hide these columns from plainsight }
   For Index := 0 To HIDDEN_GRDMAIN_COLUMNS.Count - 1
     Do grdMain.Columns [StrToInt (HIDDEN_GRDMAIN_COLUMNS.Strings [Index])].Width := 0;
 
-  { Set up the default column text }
+{ Set up the default column text }
   grdMain.Columns [GridColFlavor   ].Title.Caption := 'Flavor';
   grdMain.Columns [GridColDesc     ].Title.Caption := 'Description';
   grdMain.Columns [GridColType     ].Title.Caption := 'Type';
