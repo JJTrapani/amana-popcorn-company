@@ -731,8 +731,16 @@ Begin
 
   End; { For each Row }
 
-  If (SelectedText <> '')
-    Then ClipBoard.AsText := SelectedText;
+
+  { If text exists, copy it to the clipboard }
+  If (SelectedText <> '') Then Begin
+
+    ClipBoard.AsText := SelectedText;
+
+    { Display the search results on the status bar }
+    sBar.Panels [0].Text := 'Copied the term: ' + SelectedText + ' on the clipboard...';
+
+  End;
 
 End; { mnuEditCopyClick Procedure }
 { ---------------------------------------------------------------------------- }
