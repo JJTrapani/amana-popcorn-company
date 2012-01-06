@@ -23,6 +23,7 @@ Procedure SaveGlobalSettings             (          MainForm: TForm           );
 Var
   APPLICATION_PATH                        : String;
   SAVE_DIALOG_LOC                         : String;
+  SEARCH_TERM                             : String;
 
   ONLY_SHOW_ACTIVE                        : Boolean;
 
@@ -193,9 +194,9 @@ Begin
       End
 
       Else If (Param = 'HIDDEN_GRDMAIN_COLUMNS')
-        Then HIDDEN_GRDMAIN_COLUMNS.Add (GetSettingValue (TheLine, '='));
+        Then HIDDEN_GRDMAIN_COLUMNS.Add (GetSettingValue (TheLine, '='))
 
-      If (Param = 'FORM_HIDE_LEFT')
+      Else If (Param = 'FORM_HIDE_LEFT')
         Then FORM_HIDE_LEFT:= StrToInt (GetSettingValue (TheLine, '='))
 
       Else If (Param = 'FORM_HIDE_TOP')
@@ -206,6 +207,9 @@ Begin
 
       Else If (Param = 'FORM_HIDE_HEIGHT')
         Then FORM_HIDE_HEIGHT := StrToInt (GetSettingValue (TheLine, '='))
+
+      Else If (Param = 'SEARCH_TERM')
+        Then SEARCH_TERM := GetSettingValue (TheLine, '=');
 
     Except
       { Do nothing on exceptions.  Just continue }
@@ -275,7 +279,7 @@ Begin
   Settings.Add ('FORM_HIDE_TOP='   + IntToStr (FORM_HIDE_TOP));
   Settings.Add ('FORM_HIDE_HEIGHT='+ IntToStr (FORM_HIDE_HEIGHT));
   Settings.Add ('FORM_HIDE_WIDTH=' + IntToStr (FORM_HIDE_WIDTH));
-
+  Settings.Add ('SEARCH_TERM='     + SEARCH_TERM);
 
 
 

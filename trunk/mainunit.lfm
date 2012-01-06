@@ -66,6 +66,16 @@ object frmMain: TfrmMain
         ShortCut = 16453
         OnClick = mnuFileExportClick
       end
+      object mnuEditFind: TMenuItem
+        Caption = '&Find'
+        ShortCut = 16454
+        OnClick = mnuEditFindClick
+      end
+      object mnuEditFindNext: TMenuItem
+        Caption = 'Find &Next'
+        ShortCut = 114
+        OnClick = mnuEditFindNextClick
+      end
     end
     object mnuView: TMenuItem
       Caption = '&View'
