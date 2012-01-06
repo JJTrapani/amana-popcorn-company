@@ -24,6 +24,8 @@ Type
 
   { TfrmMain }
   TfrmMain = Class (TForm)
+    mnuEditFind                         : TMenuItem;
+    mnuEditFindNext                     : TMenuItem;
     mnuViewHide                         : TMenuItem;
     mnuView                             : TMenuItem;
     mnuEditExport                       : TMenuItem;
@@ -67,8 +69,10 @@ Type
     Procedure grdMainHeaderSizing       (             Sender: TObject;
                                               Const IsColumn: Boolean;
                                                 Const aIndex: Integer;
-                                                 Const aSize: Integer);
+                                                 Const aSize: Integer           );
     Procedure grdMainResize             (             Sender: TObject           );
+    procedure mnuEditFindClick          (             Sender: TObject           );
+    procedure mnuEditFindNextClick      (             Sender: TObject           );
     Procedure mnuFileExportClick        (             Sender: TObject           );
     Procedure mnuFileRefreshClick       (             Sender: TObject           );
     Procedure mnuOptionsActiveClick     (             Sender: TObject           );
@@ -149,6 +153,7 @@ Begin
   SAVE_DIALOG_FILTER_INDEX := 1;
   HIDDEN_GRDMAIN_COLUMNS   := TStringList.Create;
   GRDMAIN_COLUMNS_WIDTHS   := TStringList.Create;
+  SEARCH_TERM              := '';
 
   { Set the default list of grid column widths }
   GRDMAIN_COLUMNS_WIDTHS.Add ('100');
@@ -358,6 +363,214 @@ Begin
 End; { grdMainResize Procedure }
 { ---------------------------------------------------------------------------- }
 
+Procedure TfrmMain.mnuEditFindClick                            (         Sender: TObject               );
+Var
+  Found       : Boolean;
+  ColIndex    : Integer;
+  fColIndex   : Integer;
+  RowIndex    : Integer;
+  fRowIndex   : Integer;
+
+Begin
+
+  { Get the new search term }
+  SEARCH_TERM := Trim (UpperCase (InputBox ('Find a term', 'Please enter in a search term', '')));
+
+  { If the OK button was pressed }
+  If (SEARCH_TERM <> '') Then Begin
+
+    { Signify that we have not found our term yet }
+    Found := False;
+
+    { Initialize our found cord's }
+    fColIndex := -1;
+    fRowIndex := -1;
+
+    { While we haven't found the term from now til the end of the grid }
+    RowIndex := 0;
+
+    While (RowIndex <= grdMain.RowCount - 1) And
+          (Not Found) Do Begin
+
+      { Seach the columns }
+      ColIndex := 0;
+      While (ColIndex <= grdMain.ColCount - 4) And
+            (Not Found) Do Begin
+
+        sBar.Panels [0].Text := 'Searching ' + UpperCase (grdMain.Cells [ColIndex, RowIndex]) + ' for the term ' + SEARCH_TERM;
+        Application.ProcessMessages;
+
+           { If the column is not hidden }
+        If (HIDDEN_GRDMAIN_COLUMNS.IndexOf (IntToStr (ColIndex)) = -1) And
+
+           { If the contains part of the search term }
+           (Pos (SEARCH_TERM, UpperCase (grdMain.Cells [ColIndex, RowIndex])) > 0) Then Begin
+
+          { Take note of this cell, and exit these loops }
+          Found     := True;
+          fColIndex := ColIndex;
+          fRowIndex := RowIndex;
+
+        End { If we found a match }
+        Else
+          Inc (ColIndex);
+
+      End; { While ColIndex }
+
+      If (Not Found)
+        Then Inc (RowIndex);
+
+    End; { While we haven't found the term from now til the end of the grid }
+
+    { Show the data to the user if we found it }
+    If (Found) Then Begin
+      grdMain.Col := fColIndex;
+      grdMain.Row := fRowIndex;
+      grdMain.SetFocus;
+
+      { Display the search results on the status bar }
+      sBar.Panels [0].Text := 'Found term: ' + SEARCH_TERM + ' on Row: ' + IntToStr (fRowIndex) + ' and Column: ' + IntToStr (fColIndex);
+
+    End
+    Else
+      ShowMessage ('The term: ' + SEARCH_TERM + ' was not found in the grid.');
+
+  End; { If the user typed in a seach term }
+
+End; { mnuEditFindClick Procedure }
+{ ---------------------------------------------------------------------------- }
+
+Procedure TfrmMain.mnuEditFindNextClick                        (         Sender: TObject                );
+Var
+  Found       : Boolean;
+  BegColIndex : Integer;
+  BegRowIndex : Integer;
+  ColIndex    : Integer;
+  fColIndex   : Integer;
+  RowIndex    : Integer;
+  fRowIndex   : Integer;
+
+Begin
+
+  If (SEARCH_TERM <> '') Then Begin
+
+    { Signify that we have not found our term yet }
+    Found := False;
+
+    { Initialize our found cord's }
+    fColIndex := -1;
+    fRowIndex := -1;
+
+    { Get the FIRST selected row }
+    BegColIndex := grdMain.Selection.Left;
+    BegRowIndex := grdMain.Selection.Top;
+
+
+
+
+    { While we haven't found the term from now til the end of the grid }
+    RowIndex := BegRowIndex;
+
+    While (Not Found) And
+          (RowIndex <= grdMain.RowCount - 1) Do Begin
+
+
+
+      { Select where to seach the on the columns }
+      If (BegRowIndex = RowIndex) And
+         ((BegColIndex + 1) <= grdMain.ColCount - 4)
+        Then ColIndex := BegColIndex + 1
+        Else ColIndex := 0;
+
+      While (ColIndex <= grdMain.ColCount - 4) And
+            (Not Found) Do Begin
+
+        sBar.Panels [0].Text := 'Searching ' + UpperCase (grdMain.Cells [ColIndex, RowIndex]) + ' for the term ' + SEARCH_TERM;
+        Application.ProcessMessages;
+
+           { If the column is not hidden }
+        If (HIDDEN_GRDMAIN_COLUMNS.IndexOf (IntToStr (ColIndex)) = -1) And
+
+           { If the contains part of the search term }
+           (Pos (SEARCH_TERM, UpperCase (grdMain.Cells [ColIndex, RowIndex])) > 0) Then Begin
+
+          { Take note of this cell, and exit these loops }
+          Found := True;
+          fColIndex := ColIndex;
+          fRowIndex := RowIndex;
+
+        End
+        Else
+          Inc (ColIndex);
+
+      End; { While ColIndex }
+
+      If (Not Found)
+        Then Inc (RowIndex);
+
+    End; { While RowIndex }
+
+
+
+
+    { If we STILL haven't found the term, search the first part of the grid }
+    If (Not Found) Then Begin
+
+      { While we haven't found the term from the start of the grid til the first selection }
+      RowIndex := 0;
+      While (RowIndex <= BegRowIndex - 1) And
+            (Not Found) Do Begin
+
+        { Seach the columns }
+        ColIndex := 0;
+        While (ColIndex <= grdMain.ColCount - 4) And
+              (Not Found) Do Begin
+
+          sBar.Panels [0].Text := 'Searching ' + UpperCase (grdMain.Cells [ColIndex, RowIndex]) + ' for the term ' + SEARCH_TERM;
+          Application.ProcessMessages;
+
+             { If the column is not hidden }
+          If (HIDDEN_GRDMAIN_COLUMNS.IndexOf (IntToStr (ColIndex)) = -1) And
+
+             { If the contains part of the search term }
+             (Pos (SEARCH_TERM, UpperCase (grdMain.Cells [ColIndex, RowIndex])) > 0) Then Begin
+
+            { Take note of this cell, and exit these loops }
+            Found := True;
+            fColIndex := ColIndex;
+            fRowIndex := RowIndex;
+
+          End
+          Else
+            Inc (ColIndex);
+
+        End; { While ColIndex }
+
+        If (Not Found)
+          Then Inc (RowIndex);
+
+      End; { While RowIndex }
+
+    End; { If still not found }
+
+    { Show the data to the user if we found it }
+    If (Found) Then Begin
+      grdMain.Col := fColIndex;
+      grdMain.Row := fRowIndex;
+      grdMain.SetFocus;
+
+      { Display the search results on the status bar }
+      sBar.Panels [0].Text := 'Found term: ' + SEARCH_TERM + ' on Row: ' + IntToStr (fRowIndex) + ' and Column: ' + IntToStr (fColIndex);
+
+    End
+    Else
+      ShowMessage ('The term: ' + SEARCH_TERM + ' was not found in the grid.');
+
+  End; { If there was a valid search term }
+
+End; { mnuEditFindNextClick Procedure }
+{ ---------------------------------------------------------------------------- }
+
 Procedure TfrmMain.mnuFileExportClick                          (         Sender: TObject               );
 Var
   SaveAsTXT : Boolean;
@@ -378,9 +591,9 @@ Begin
   If (dlgSave.Execute) Then Begin
 
     { Get the path of the file and create the new file via a TStringList }
-    SAVE_DIALOG_LOC := ExtractFilePath (dlgSave.FileName);
+    SAVE_DIALOG_LOC          := ExtractFilePath (dlgSave.FileName);
     SAVE_DIALOG_FILTER_INDEX := dlgSave.FilterIndex;
-    NewFile         := TStringList.Create;
+    NewFile                  := TStringList.Create;
     NewFile.Clear;
 
     { Determine if we are saving a txt or csv file }
