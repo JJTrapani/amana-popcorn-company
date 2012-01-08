@@ -52,6 +52,16 @@ Begin
   qryAmana.Database    := dbAmana;
   qryQuick.Database    := dbAmana;
 
+  { MySQL client library is compiled to expect Latin1 character set by default }
+  qryAmana.SQL.Text := 'SET CHARACTER SET utf8';
+  qryAmana.ExecSQL;
+  qryAmana.SQL.Text := 'SET NAMES utf8';
+  qryAmana.ExecSQL;
+  qryQuick.SQL.Text := 'SET CHARACTER SET utf8';
+  qryQuick.ExecSQL;
+  qryQuick.SQL.Text := 'SET NAMES utf8';
+  qryQuick.ExecSQL;
+
 End; { DataModuleCreate Procedure }
 { ---------------------------------------------------------------------------- }
 
